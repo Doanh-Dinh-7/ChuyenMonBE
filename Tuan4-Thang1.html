@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tư Duy Backend & AI Helper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chosen Palette: Slate (Background), Indigo (Primary), Emerald (Success), Rose (Accent) -->
+    <!-- Application Structure Plan:
+         - Layout: Sidebar navigation (Left) + Dynamic Content Area (Right).
+         - Navigation: 5 sequential modules covering the curriculum.
+         - Modules:
+           1. Overview & Mindset: Introduction + Skill Chart.
+           2. Requirement Analysis: Interactive "Keyword Highlighter" game to extract logic from client requests.
+           3. API Design: Interactive JSON builder and Status Code visualizer.
+           4. Flask Preview: Simulated Code Runner.
+           5. AI Assistant: Prompt Engineering simulator (Bad vs Good Prompt).
+           6. Final Project: JSON API Mockup Tool.
+         - Interaction: Users click to select, type to simulate coding, and view dynamic chart updates.
+    -->
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'Fira Code', monospace; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        /* Animations */
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Interactive Highlights for Req Analysis */
+        .highlight-word {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            border: 1px dashed #cbd5e1;
+        }
+        .highlight-word:hover { background-color: #e0e7ff; }
+        .highlight-word.selected { background-color: #fbbf24; border-color: #d97706; color: #78350f; font-weight: bold; }
+        .highlight-word.correct { background-color: #4ade80; border-color: #16a34a; color: #14532d; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-72 bg-slate-900 text-slate-100 flex flex-col shadow-2xl flex-shrink-0 z-20 transition-transform duration-300 transform md:translate-x-0 -translate-x-full absolute md:relative h-full" id="sidebar">
+        <div class="p-6 border-b border-slate-800 bg-slate-950">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded bg-indigo-600 flex items-center justify-center text-white font-bold text-xl"><i class="fa-solid fa-server"></i></div>
+                <div>
+                    <h1 class="font-bold text-base tracking-wide uppercase">Backend 101</h1>
+                    <p class="text-xs text-slate-400">Tư duy & AI Helper</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-2" id="nav-container">
+            <!-- JS Injected Nav -->
+        </nav>
+
+        <div class="p-4 bg-slate-800 border-t border-slate-700 text-xs">
+            <div class="flex justify-between mb-2 text-slate-400">
+                <span>Tiến độ</span>
+                <span id="progress-text">0%</span>
+            </div>
+            <div class="w-full bg-slate-700 h-1.5 rounded-full">
+                <div id="progress-bar" class="bg-indigo-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen relative w-full">
+        <!-- Mobile Header -->
+        <header class="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center z-10">
+            <span class="font-bold text-slate-800">Backend Course</span>
+            <button id="menu-btn" class="text-slate-600 focus:outline-none">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+        </header>
+
+        <!-- Content Scroll Area -->
+        <div id="main-content" class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth bg-slate-50">
+            <!-- Content Injected Here -->
+        </div>
+    </main>
+
+    <!-- Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-10 hidden md:hidden"></div>
+
+    <!-- Visualization & Content Choices:
+         - Charts: 
+            1. 'Backend Skills Radar' to show the balance needed between Logic, Database, and Communication.
+            2. 'AI Efficiency Bar Chart' comparing coding speed with vs without AI Prompting.
+         - Simulation 1 (Req Analysis): Interactive text highlighting. Users click words in a "Client Email" to identify Entities and Actions.
+         - Simulation 2 (Prompting): A "Before/After" toggle showing how a vague prompt leads to generic code, while a specific prompt leads to production-ready code.
+         - Simulation 3 (Mini Project): A form-based JSON builder where users define the structure of a Todo Item.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <script>
+        // --- Course Content Data ---
+        const modules = {
+            intro: {
+                id: 'intro',
+                title: 'Tổng Quan & Tư Duy',
+                icon: 'fa-solid fa-brain',
+                content: `
+                    <div class="max-w-4xl mx-auto fade-in">
+                        <div class="text-center mb-10">
+                            <h2 class="text-3xl font-bold text-slate-800 mb-4">Lộ Trình Backend & AI Helper</h2>
+                            <p class="text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                                Backend không chỉ là viết code. Đó là nghệ thuật dịch yêu cầu con người sang ngôn ngữ máy, tổ chức dữ liệu và bảo mật.
+                                Khóa học 1 tuần này sẽ trang bị cho bạn tư duy cốt lõi kết hợp với sức mạnh của AI.
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                <h3 class="font-bold text-lg text-indigo-700 mb-4 border-b pb-2">Kỹ Năng Backend Hiện Đại</h3>
+                                <p class="text-sm text-slate-600 mb-4">Backend Developer ngày nay không làm việc một mình. Chúng ta cần kết hợp Logic, Kiến thức hệ thống và Kỹ năng sử dụng AI.</p>
+                                <div class="chart-container">
+                                    <canvas id="skillChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-indigo-50 p-4 rounded-lg border-l-4 border-indigo-500">
+                                    <h4 class="font-bold text-indigo-900 mb-1">Mục tiêu khóa học</h4>
+                                    <ul class="text-sm text-indigo-800 space-y-2 list-disc pl-4">
+                                        <li>Hiểu cách phân tích yêu cầu từ khách hàng.</li>
+                                        <li>Thiết kế cấu trúc API chuẩn RESTful.</li>
+                                        <li>Viết code Flask cơ bản.</li>
+                                        <li><strong>Quan trọng:</strong> Biết cách Prompt AI để code nhanh gấp 5 lần.</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-emerald-50 p-4 rounded-lg border-l-4 border-emerald-500">
+                                    <h4 class="font-bold text-emerald-900 mb-1">Dự án cuối khóa</h4>
+                                    <p class="text-sm text-emerald-800">Thiết kế hệ thống "To-Do List CLI" - Ứng dụng quản lý công việc dòng lệnh.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            analysis: {
+                id: 'analysis',
+                title: 'Phân Tích Requirements',
+                icon: 'fa-solid fa-magnifying-glass',
+                sections: [
+                    {
+                        title: "1. Từ Yêu Cầu Đến Thực Thể",
+                        theory: "Khách hàng thường diễn đạt ý muốn bằng ngôn ngữ tự nhiên. Nhiệm vụ của bạn là tìm ra <strong>Danh từ (Entities)</strong> và <strong>Động từ (Actions)</strong>.",
+                        interactive: 'req_game'
+                    },
+                    {
+                        title: "2. Cấu trúc hóa",
+                        theory: "Sau khi tìm được từ khóa, ta chuyển đổi chúng thành mô hình dữ liệu.",
+                        content: `
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div class="bg-slate-100 p-4 rounded">
+                                    <p class="font-bold text-slate-700 mb-2">Input (Khách hàng)</p>
+                                    <p class="text-sm italic text-slate-600">"User có thể tạo nhiều todo list, mỗi list có tên và màu sắc."</p>
+                                </div>
+                                <div class="bg-white border border-slate-200 p-4 rounded relative">
+                                    <p class="font-bold text-indigo-600 mb-2">Output (Developer)</p>
+                                    <div class="font-mono text-xs text-slate-800 bg-slate-50 p-2 rounded">
+                                        Class TodoList {<br>
+                                        &nbsp;&nbsp;id: int<br>
+                                        &nbsp;&nbsp;name: string<br>
+                                        &nbsp;&nbsp;color: string<br>
+                                        &nbsp;&nbsp;owner_id: int (User)<br>
+                                        }
+                                    </div>
+                                    <div class="absolute top-1/2 -left-3 transform -translate-y-1/2 text-slate-400">
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    }
+                ]
+            },
+            api_design: {
+                id: 'api_design',
+                title: 'Tư Duy Thiết Kế API',
+                icon: 'fa-solid fa-network-wired',
+                sections: [
+                    {
+                        title: "1. RESTful API là gì?",
+                        theory: "Là quy chuẩn giao tiếp. Hãy tưởng tượng API là menu của nhà hàng. Client (người dùng) gọi món dựa trên menu đó.",
+                        content: `
+                            <div class="overflow-x-auto mt-4 border rounded-lg">
+                                <table class="w-full text-sm text-left text-slate-600">
+                                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                        <tr>
+                                            <th class="px-6 py-3">Method</th>
+                                            <th class="px-6 py-3">Endpoint</th>
+                                            <th class="px-6 py-3">Ý nghĩa</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="bg-white border-b hover:bg-slate-50">
+                                            <td class="px-6 py-4 font-bold text-blue-600">GET</td>
+                                            <td class="px-6 py-4 font-mono">/tasks</td>
+                                            <td class="px-6 py-4">Lấy danh sách công việc</td>
+                                        </tr>
+                                        <tr class="bg-white border-b hover:bg-slate-50">
+                                            <td class="px-6 py-4 font-bold text-green-600">POST</td>
+                                            <td class="px-6 py-4 font-mono">/tasks</td>
+                                            <td class="px-6 py-4">Tạo công việc mới</td>
+                                        </tr>
+                                        <tr class="bg-white hover:bg-slate-50">
+                                            <td class="px-6 py-4 font-bold text-red-600">DELETE</td>
+                                            <td class="px-6 py-4 font-mono">/tasks/1</td>
+                                            <td class="px-6 py-4">Xóa công việc ID 1</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        `
+                    },
+                    {
+                        title: "2. Cấu trúc JSON",
+                        theory: "Dữ liệu trả về phải thống nhất. Luôn bao gồm trạng thái (status) và dữ liệu (data).",
+                        interactive: 'json_builder'
+                    }
+                ]
+            },
+            flask_intro: {
+                id: 'flask_intro',
+                title: 'Flask & Python Cơ Bản',
+                icon: 'fa-brands fa-python',
+                sections: [
+                    {
+                        title: "1. Tại sao chọn Flask?",
+                        theory: "Flask là Micro-framework. Nó gọn nhẹ, linh hoạt, rất phù hợp để học tư duy Backend mà không bị rối bởi quá nhiều cấu hình.",
+                        content: `
+                            <div class="bg-slate-900 text-slate-200 p-4 rounded-lg font-mono text-sm relative mt-4 shadow-lg">
+                                <div class="absolute top-2 right-2 flex gap-1">
+                                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                                <div class="mb-4 text-slate-500"># app.py</div>
+                                <div><span class="text-pink-400">from</span> flask <span class="text-pink-400">import</span> Flask, jsonify</div>
+                                <br>
+                                <div>app = Flask(__name__)</div>
+                                <br>
+                                <div><span class="text-yellow-400">@app.route</span>(<span class="text-green-400">'/'</span>)</div>
+                                <div><span class="text-pink-400">def</span> <span class="text-blue-400">home</span>():</div>
+                                <div class="pl-4"><span class="text-pink-400">return</span> jsonify({<span class="text-green-400">"message"</span>: <span class="text-green-400">"Hello Backend!"</span>})</div>
+                                <br>
+                                <div><span class="text-pink-400">if</span> __name__ == <span class="text-green-400">'__main__'</span>:</div>
+                                <div class="pl-4">app.run(debug=<span class="text-purple-400">True</span>)</div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <button onclick="simulateRun()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded transition-colors shadow-lg">
+                                    <i class="fa-solid fa-play mr-2"></i> Chạy thử Code
+                                </button>
+                            </div>
+                            <div id="terminal-output" class="hidden mt-4 bg-black text-green-400 font-mono text-xs p-4 rounded border-l-4 border-green-500">
+                                > python app.py<br>
+                                * Serving Flask app 'app'<br>
+                                * Running on http://127.0.0.1:5000<br>
+                                > curl http://127.0.0.1:5000/<br>
+                                { "message": "Hello Backend!" }
+                            </div>
+                        `
+                    }
+                ]
+            },
+            ai_helper: {
+                id: 'ai_helper',
+                title: 'AI Prompting Skill',
+                icon: 'fa-solid fa-robot',
+                sections: [
+                    {
+                        title: "1. Công thức Prompt chuẩn",
+                        theory: "AI (ChatGPT/Gemini) giống như một Junior Developer tài năng nhưng cần hướng dẫn cụ thể. Công thức: <strong>Context + Task + Constraints + Format</strong>.",
+                        interactive: 'prompt_sim'
+                    },
+                    {
+                        title: "2. Hiệu quả thực tế",
+                        theory: "So sánh thời gian hoàn thành một chức năng CRUD cơ bản.",
+                        content: `
+                            <div class="chart-container mt-4">
+                                <canvas id="efficiencyChart"></canvas>
+                            </div>
+                            <p class="text-center text-xs text-slate-500 mt-2">Dữ liệu ước tính cho Junior Developer</p>
+                        `
+                    }
+                ]
+            },
+            project: {
+                id: 'project',
+                title: 'Mini Project: To-Do CLI',
+                icon: 'fa-solid fa-check-double',
+                content: `
+                    <div class="max-w-4xl mx-auto fade-in">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <h2 class="text-2xl font-bold text-slate-800 mb-4">Bài Tập: Thiết Kế JSON API</h2>
+                            <p class="text-slate-600 mb-6">Hãy thiết kế cấu trúc JSON cho một công việc (Task) trong ứng dụng To-Do. Yêu cầu có: ID, Tiêu đề, Trạng thái (Done/Not Done), và Ngày tạo.</p>
+                            
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Điền cấu trúc JSON của bạn:</label>
+                                    <textarea id="json-input" rows="10" class="w-full bg-slate-50 border border-slate-300 rounded p-4 font-mono text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder='{
+  "id": 1,
+  "title": "...",
+  ...
+}'></textarea>
+                                    <button onclick="checkProject()" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded transition-colors">
+                                        Kiểm tra
+                                    </button>
+                                </div>
+                                
+                                <div id="project-feedback" class="hidden bg-slate-50 border border-slate-200 p-4 rounded flex flex-col justify-center items-center text-center">
+                                    <!-- Dynamic Feedback -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        // --- Core Logic ---
+        let currentModuleId = 'intro';
+
+        function init() {
+            renderNav();
+            loadModule('intro');
+            
+            // Mobile Menu
+            const btn = document.getElementById('menu-btn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const toggle = () => {
+                const closed = sidebar.classList.contains('-translate-x-full');
+                if (closed) {
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.remove('hidden');
+                } else {
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                }
+            };
+            btn.onclick = toggle;
+            overlay.onclick = toggle;
+        }
+
+        function renderNav() {
+            const container = document.getElementById('nav-container');
+            container.innerHTML = '';
+            
+            Object.values(modules).forEach(mod => {
+                const isActive = mod.id === currentModuleId;
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${isActive ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`;
+                btn.onclick = () => loadModule(mod.id);
+                btn.innerHTML = `
+                    <i class="${mod.icon} w-5 text-center"></i>
+                    <span class="font-medium text-sm">${mod.title}</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function loadModule(id) {
+            currentModuleId = id;
+            renderNav();
+            updateProgress();
+            
+            const mod = modules[id];
+            const contentDiv = document.getElementById('main-content');
+            
+            // Header
+            let html = `
+                <div class="mb-6 fade-in">
+                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                        <span class="bg-indigo-100 text-indigo-600 p-2 rounded-lg text-lg"><i class="${mod.icon}"></i></span>
+                        ${mod.title}
+                    </h2>
+                </div>
+            `;
+
+            // Simple Content Modules
+            if (mod.content && !mod.sections) {
+                html += mod.content;
+                contentDiv.innerHTML = html;
+                
+                // Charts init for specific modules
+                if (id === 'intro') setTimeout(initSkillChart, 100);
+                if (id === 'project') { /* Project specific if needed */ }
+                return;
+            }
+
+            // Structured Modules
+            if (mod.sections) {
+                mod.sections.forEach(sec => {
+                    html += `
+                        <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8 fade-in">
+                            <h3 class="text-lg font-bold text-slate-800 mb-3 border-l-4 border-indigo-500 pl-3">${sec.title}</h3>
+                            <p class="text-slate-600 mb-4 text-sm leading-relaxed">${sec.theory}</p>
+                            
+                            ${sec.content ? sec.content : ''}
+                            ${sec.interactive === 'req_game' ? renderReqGame() : ''}
+                            ${sec.interactive === 'prompt_sim' ? renderPromptSim() : ''}
+                            ${sec.interactive === 'json_builder' ? renderJsonBuilder() : ''}
+                        </section>
+                    `;
+                });
+                contentDiv.innerHTML = html;
+                if (id === 'ai_helper') setTimeout(initEfficiencyChart, 100);
+            }
+        }
+
+        function updateProgress() {
+            const keys = Object.keys(modules);
+            const idx = keys.indexOf(currentModuleId);
+            const pct = Math.round(((idx + 1) / keys.length) * 100);
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+            document.getElementById('progress-text').innerText = `${pct}%`;
+        }
+
+        // --- Interactive Components ---
+
+        function renderReqGame() {
+            return `
+                <div class="bg-slate-50 border border-slate-200 rounded p-4">
+                    <p class="text-sm font-bold text-slate-500 uppercase mb-2">Email từ khách hàng (Click vào từ khóa quan trọng):</p>
+                    <div id="req-text" class="text-lg leading-loose text-slate-800 bg-white p-4 rounded shadow-sm border border-slate-100">
+                        "Chào team, tôi muốn làm một ứng dụng <span class="highlight-word" onclick="toggleHighlight(this)">quản lý việc cần làm</span>. 
+                        Người dùng cần <span class="highlight-word" onclick="toggleHighlight(this)">đăng nhập</span> để xem danh sách. 
+                        Họ có thể <span class="highlight-word" onclick="toggleHighlight(this)">thêm</span> công việc mới, 
+                        <span class="highlight-word" onclick="toggleHighlight(this)">sửa</span> nội dung hoặc 
+                        <span class="highlight-word" onclick="toggleHighlight(this)">xóa</span> đi nếu lỡ tay."
+                    </div>
+                    <div id="req-feedback" class="mt-4 text-sm font-bold hidden"></div>
+                    <button onclick="checkReqGame()" class="mt-4 px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded hover:bg-indigo-700 transition">Kiểm tra từ khóa</button>
+                </div>
+            `;
+        }
+
+        function toggleHighlight(el) {
+            el.classList.toggle('selected');
+        }
+
+        function checkReqGame() {
+            const words = document.querySelectorAll('.highlight-word');
+            let score = 0;
+            words.forEach(w => {
+                // Giả định tất cả từ highlight trong bài đều là keywords đúng cho đơn giản hóa demo
+                if (w.classList.contains('selected')) {
+                    w.classList.add('correct');
+                    score++;
+                }
+            });
+            const fb = document.getElementById('req-feedback');
+            fb.classList.remove('hidden');
+            if (score >= 3) {
+                fb.className = "mt-4 text-sm font-bold text-emerald-600";
+                fb.innerHTML = `<i class="fa-solid fa-check mr-1"></i> Xuất sắc! Bạn đã xác định được các hành động (CRUD) và thực thể chính.`;
+            } else {
+                fb.className = "mt-4 text-sm font-bold text-orange-600";
+                fb.innerText = "Hãy thử tìm thêm các động từ chỉ hành động (Thêm, Sửa, Xóa...)";
+            }
+        }
+
+        function renderPromptSim() {
+            return `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="border border-red-200 rounded bg-red-50 p-4">
+                        <h4 class="font-bold text-red-700 mb-2">❌ Bad Prompt</h4>
+                        <div class="bg-white p-2 rounded text-sm text-slate-600 mb-2 italic">"Viết code python cho to-do app."</div>
+                        <div class="text-xs text-red-600">-> AI trả về code Console đơn giản, không có Database, không có API, dùng biến toàn cục lộn xộn.</div>
+                    </div>
+                    <div class="border border-emerald-200 rounded bg-emerald-50 p-4">
+                        <h4 class="font-bold text-emerald-700 mb-2">✅ Good Prompt</h4>
+                        <div class="bg-white p-2 rounded text-sm text-slate-600 mb-2 italic">"Viết API bằng Flask cho ứng dụng To-Do. Cần các endpoints CRUD cho 'Tasks'. Sử dụng SQLite. Trả về format JSON chuẩn."</div>
+                        <div class="text-xs text-emerald-600">-> AI trả về cấu trúc Flask chuẩn, có Model Database, Routes rõ ràng, JSON Response đúng điệu.</div>
+                    </div>
+                </div>
+                <div class="mt-4 bg-slate-100 p-4 rounded text-center">
+                    <p class="text-sm text-slate-600 mb-2">Thử chọn thành phần Prompt:</p>
+                    <div class="flex flex-wrap justify-center gap-2">
+                        <button onclick="this.classList.toggle('bg-indigo-600'); this.classList.toggle('text-white')" class="px-3 py-1 bg-white border border-slate-300 rounded text-xs transition">Role: Expert Backend</button>
+                        <button onclick="this.classList.toggle('bg-indigo-600'); this.classList.toggle('text-white')" class="px-3 py-1 bg-white border border-slate-300 rounded text-xs transition">Task: Write Function</button>
+                        <button onclick="this.classList.toggle('bg-indigo-600'); this.classList.toggle('text-white')" class="px-3 py-1 bg-white border border-slate-300 rounded text-xs transition">Context: Flask App</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderJsonBuilder() {
+            return `
+                <div class="flex flex-col md:flex-row gap-4 items-start">
+                    <div class="w-full md:w-1/2">
+                        <p class="text-sm font-bold text-slate-700 mb-2">Chọn thuộc tính:</p>
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2 p-2 bg-slate-50 rounded border">
+                                <input type="checkbox" checked disabled class="text-indigo-600"> 
+                                <span class="text-sm">"status": "success"</span>
+                            </div>
+                            <div class="flex items-center gap-2 p-2 bg-slate-50 rounded border">
+                                <input type="checkbox" id="chk-data" onchange="updateJsonPreview()" class="text-indigo-600"> 
+                                <span class="text-sm">"data": [ ... ]</span>
+                            </div>
+                            <div class="flex items-center gap-2 p-2 bg-slate-50 rounded border">
+                                <input type="checkbox" id="chk-msg" onchange="updateJsonPreview()" class="text-indigo-600"> 
+                                <span class="text-sm">"message": "Found 2 tasks"</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/2">
+                        <p class="text-sm font-bold text-slate-700 mb-2">Preview JSON:</p>
+                        <pre id="json-preview" class="bg-slate-900 text-green-400 p-4 rounded text-xs font-mono">
+{
+  "status": "success"
+}</pre>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateJsonPreview() {
+            const hasData = document.getElementById('chk-data').checked;
+            const hasMsg = document.getElementById('chk-msg').checked;
+            
+            let obj = { status: "success" };
+            if (hasMsg) obj.message = "Found 2 tasks";
+            if (hasData) obj.data = [{ id: 1, title: "Learn Flask" }, { id: 2, title: "Sleep" }];
+
+            document.getElementById('json-preview').innerText = JSON.stringify(obj, null, 2);
+        }
+
+        function simulateRun() {
+            const terminal = document.getElementById('terminal-output');
+            terminal.classList.remove('hidden');
+        }
+
+        function checkProject() {
+            const input = document.getElementById('json-input').value;
+            const feedback = document.getElementById('project-feedback');
+            feedback.classList.remove('hidden');
+            
+            // Basic validation logic
+            const hasId = input.includes('"id"');
+            const hasTitle = input.includes('"title"');
+            const hasStatus = input.includes('"status"') || input.includes('"completed"');
+            
+            if (hasId && hasTitle && hasStatus) {
+                feedback.innerHTML = `
+                    <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl mb-2"><i class="fa-solid fa-check"></i></div>
+                    <h4 class="font-bold text-emerald-800">Tuyệt vời!</h4>
+                    <p class="text-sm text-emerald-700">Cấu trúc JSON của bạn đã bao gồm các trường quan trọng nhất. Bạn đã sẵn sàng để viết API thực tế.</p>
+                `;
+                feedback.className = "bg-emerald-50 border border-emerald-200 p-6 rounded flex flex-col justify-center items-center text-center";
+            } else {
+                feedback.innerHTML = `
+                    <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-xl mb-2"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <h4 class="font-bold text-orange-800">Còn thiếu chút xíu...</h4>
+                    <p class="text-sm text-orange-700">Hãy kiểm tra xem bạn đã có đủ <code>id</code>, <code>title</code> và trạng thái công việc chưa nhé.</p>
+                `;
+                feedback.className = "bg-orange-50 border border-orange-200 p-6 rounded flex flex-col justify-center items-center text-center";
+            }
+        }
+
+        // --- Charts Initialization ---
+        
+        function initSkillChart() {
+            const ctx = document.getElementById('skillChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Logic Code', 'Cơ sở dữ liệu', 'API Design', 'AI Prompting', 'Bảo mật'],
+                    datasets: [{
+                        label: 'Junior Dev (Truyền thống)',
+                        data: [70, 60, 40, 10, 30],
+                        backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                        borderColor: 'rgba(148, 163, 184, 1)',
+                        pointBackgroundColor: 'rgba(148, 163, 184, 1)',
+                    }, {
+                        label: 'Modern Backend Dev (+AI)',
+                        data: [85, 75, 80, 90, 60],
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: '#e2e8f0' },
+                            grid: { color: '#e2e8f0' },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        function initEfficiencyChart() {
+            const ctx = document.getElementById('efficiencyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Setup Project', 'Viết API CRUD', 'Debug lỗi', 'Viết Document'],
+                    datasets: [{
+                        label: 'Không dùng AI (Phút)',
+                        data: [30, 60, 45, 40],
+                        backgroundColor: '#94a3b8'
+                    }, {
+                        label: 'Có dùng AI (Phút)',
+                        data: [5, 15, 10, 5],
+                        backgroundColor: '#4ade80'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Thời gian (phút)' } }
+                    }
+                }
+            });
+        }
+
+        // Initialize App
+        init();
+
+    </script>
+</body>
+</html>
