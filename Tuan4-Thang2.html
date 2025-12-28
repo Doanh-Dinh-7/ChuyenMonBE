@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khóa Học Mini Project Flask: To-Do List API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .code-preview { background-color: #1e293b; color: #e2e8f0; font-family: 'Courier New', Courier, monospace; }
+        .nav-item.active { background-color: #e7e5e4; border-right: 4px solid #0ea5e9; font-weight: 600; color: #0f172a; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Chart Container Styling per requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 350px; }
+        }
+        .step-circle { transition: all 0.3s ease; }
+        .step-circle:hover { transform: scale(1.1); }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals (Stone) with Sky Blue (Logic) and Emerald (Success) accents for a calm learning environment. -->
+    <!-- Application Structure Plan: A Dashboard-style Learning Management System (LMS) simulation. 
+         Sidebar navigation breaks the 1-week course into logical modules (Overview, Architecture, Implementation, Best Practices, Project).
+         The main content area dynamically updates using JS.
+         Key interactions include:
+         1. Interactive MVC Diagram: Clicking components reveals their roles.
+         2. Code Structure Toggle: Switching between 'Messy' and 'Clean' folder structures.
+         3. Simulated API Client: A 'Postman-lite' built in JS to test the theoretical endpoints.
+         4. Knowledge Checks: Simple interactive quizzes. 
+    -->
+    <!-- Visualization & Content Choices:
+         1. Module 1 (Comparisons): Bar Chart (Chart.js) to compare Flask vs Django complexity/flexibility.
+         2. Module 2 (MVC): Interactive CSS/HTML Block Diagram (No SVG).
+         3. Module 3 (REST): Interactive Status Code Grid.
+         4. Module 5 (Project): 'To-Do List' simulation using JS array to mimic a database, allowing users to 'POST' and 'GET' items.
+         5. Justification: Using canvas for charts and DOM manipulation for simulations ensures accessibility and interactivity without heavy images.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-stone-50 text-stone-800 h-screen flex overflow-hidden">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-stone-100 border-r border-stone-200 flex-shrink-0 flex flex-col h-full overflow-y-auto">
+        <div class="p-6 border-b border-stone-200">
+            <h1 class="text-xl font-bold text-stone-900">Flask Mastery</h1>
+            <p class="text-xs text-stone-500 mt-1">Mini Project: To-Do API</p>
+            <div class="mt-4 bg-stone-200 rounded-full h-2 w-full overflow-hidden">
+                <div id="progress-bar" class="bg-sky-500 h-full w-0 transition-all duration-500"></div>
+            </div>
+            <p class="text-xs text-right mt-1 text-sky-600 font-semibold" id="progress-text">0% Hoàn thành</p>
+        </div>
+        <nav class="flex-1 py-4 space-y-1" id="nav-container">
+            <!-- Nav items injected by JS -->
+        </nav>
+        <div class="p-4 border-t border-stone-200 text-xs text-stone-400">
+            <p>© 2024 Flask Course</p>
+            <p>Phiên bản dành cho SV</p>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <!-- Header -->
+        <header class="bg-white border-b border-stone-200 py-4 px-8 flex justify-between items-center shadow-sm z-10">
+            <div>
+                <h2 id="page-title" class="text-2xl font-bold text-stone-800">Tổng quan</h2>
+                <p id="page-subtitle" class="text-sm text-stone-500">Ngày 1: Giới thiệu & Tại sao chọn Flask?</p>
+            </div>
+            <button onclick="toggleResources()" class="text-sm bg-stone-100 hover:bg-stone-200 text-stone-700 py-2 px-4 rounded transition">
+                Tài liệu tham khảo
+            </button>
+        </header>
+
+        <!-- Content Scroll Area -->
+        <div id="content-area" class="flex-1 overflow-y-auto p-8 fade-in scroll-smooth">
+            <!-- Dynamic Content Injected Here -->
+        </div>
+        
+        <!-- Resources Modal (Hidden by default) -->
+        <div id="resources-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg max-w-md w-full shadow-xl">
+                <h3 class="text-lg font-bold mb-4">Tài nguyên hữu ích</h3>
+                <ul class="space-y-2 text-sm text-sky-600 underline">
+                    <li><a href="https://flask.palletsprojects.com/en/stable/" class="hover:text-sky-800">Flask Documentation chính chủ</a></li>
+                    <li><a href="https://realpython.com/tutorials/flask/" class="hover:text-sky-800">Real Python: Flask Guide</a></li>
+                    <li><a href="https://learning.postman.com/" class="hover:text-sky-800">Postman Download</a></li>
+                    <li><a href="https://docs.sqlalchemy.org/en/20/" class="hover:text-sky-800">SQLAlchemy Docs</a></li>
+                </ul>
+                <button onclick="toggleResources()" class="mt-6 w-full bg-stone-200 text-stone-800 py-2 rounded hover:bg-stone-300">Đóng</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- DATA STORE ---
+        const courseData = {
+            modules: [
+                {
+                    id: 'intro',
+                    title: '1. Giới thiệu Flask',
+                    subtitle: 'Khái niệm, Ưu điểm và So sánh',
+                    readTime: '45 phút',
+                    content: `
+                        <div class="max-w-4xl mx-auto space-y-8">
+                            <!-- Intro Section -->
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                                <h3 class="text-lg font-bold text-stone-800 mb-2">Flask là gì?</h3>
+                                <p class="text-stone-600 leading-relaxed mb-4">
+                                    Flask là một <strong>micro-framework</strong> viết bằng Python. Nó được gọi là "micro" vì nó không yêu cầu các công cụ hay thư viện cụ thể. Nó không có lớp trừu tượng cơ sở dữ liệu, xác thực form, hay bất kỳ thành phần nào khác mà các thư viện bên thứ ba đã cung cấp.
+                                </p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                                    <div class="bg-green-50 p-4 rounded border-l-4 border-green-500">
+                                        <h4 class="font-bold text-green-700">Ưu điểm</h4>
+                                        <ul class="list-disc ml-5 text-sm text-stone-700 mt-2 space-y-1">
+                                            <li>Cực kỳ linh hoạt, dễ mở rộng.</li>
+                                            <li>Dễ học cho người mới bắt đầu.</li>
+                                            <li>Cộng đồng hỗ trợ lớn.</li>
+                                            <li>Kiểm soát hoàn toàn cấu trúc dự án.</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-amber-50 p-4 rounded border-l-4 border-amber-500">
+                                        <h4 class="font-bold text-amber-700">Nhược điểm</h4>
+                                        <ul class="list-disc ml-5 text-sm text-stone-700 mt-2 space-y-1">
+                                            <li>Phải tự cài đặt thêm nhiều thư viện (Auth, ORM).</li>
+                                            <li>Dễ tạo ra cấu trúc code lộn xộn nếu không có kinh nghiệm.</li>
+                                            <li>Không "pin included" như Django.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Visualization: Flask vs Django -->
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                                <h3 class="text-lg font-bold text-stone-800 mb-4">So sánh: Flask vs Django</h3>
+                                <p class="text-sm text-stone-500 mb-4">Biểu đồ so sánh mức độ linh hoạt và độ phức tạp ban đầu.</p>
+                                <div class="chart-container">
+                                    <canvas id="comparisonChart"></canvas>
+                                </div>
+                                <div class="mt-4 text-sm text-stone-600 italic text-center">
+                                    "Flask cho bạn những mảnh ghép, Django cho bạn ngôi nhà đã xây sẵn."
+                                </div>
+                            </div>
+                            
+                            <!-- Reality Check -->
+                            <div class="bg-stone-800 text-stone-200 p-6 rounded-lg">
+                                <h3 class="text-lg font-bold text-white mb-2">Liên hệ thực tế</h3>
+                                <p class="mb-2">Khi nào nên dùng Flask?</p>
+                                <ul class="list-disc ml-5 space-y-1 text-sm text-stone-300">
+                                    <li>Xây dựng <strong>Microservices</strong>.</li>
+                                    <li>Làm các dự án <strong>MVP (Minimum Viable Product)</strong> nhanh chóng.</li>
+                                    <li>Hệ thống IoT backend đơn giản.</li>
+                                    <li>Học về cách Web Framework hoạt động từ cốt lõi.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `,
+                    init: () => initComparisonChart()
+                },
+                {
+                    id: 'mvc',
+                    title: '2. Mô hình MVC & Cấu trúc',
+                    subtitle: 'Tổ chức code chuyên nghiệp',
+                    readTime: '60 phút',
+                    content: `
+                        <div class="max-w-4xl mx-auto space-y-8">
+                            <!-- Theory -->
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                                <h3 class="text-lg font-bold text-stone-800 mb-2">MVC trong Flask</h3>
+                                <p class="text-stone-600 mb-4">
+                                    Dù Flask không ép buộc MVC (Model-View-Controller), nhưng đây là tiêu chuẩn vàng để tổ chức code. 
+                                    Trong Flask, <strong>View</strong> thường là Templates, và <strong>Controller</strong> chính là các View Functions (Routes).
+                                </p>
+                                
+                                <!-- Interactive MVC Diagram -->
+                                <div class="bg-stone-50 p-8 border border-stone-200 rounded-xl relative overflow-hidden">
+                                    <h4 class="text-center font-bold text-stone-400 mb-6 uppercase tracking-wider">Sơ đồ tương tác (Click để xem chi tiết)</h4>
+                                    <div class="flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
+                                        <!-- User -->
+                                        <div onclick="showMvcDetail('user')" class="cursor-pointer w-24 h-24 rounded-full bg-stone-600 text-white flex items-center justify-center font-bold shadow-lg hover:bg-stone-700 transition transform hover:scale-105">
+                                            User
+                                        </div>
+                                        
+                                        <!-- Arrows -->
+                                        <div class="hidden md:block text-2xl text-stone-300">➜</div>
+                                        
+                                        <!-- Controller -->
+                                        <div onclick="showMvcDetail('controller')" class="cursor-pointer w-32 h-32 rounded-lg bg-sky-500 text-white flex flex-col items-center justify-center shadow-lg hover:bg-sky-600 transition transform hover:scale-105">
+                                            <span class="font-bold text-lg">Controller</span>
+                                            <span class="text-xs text-sky-100">(Routes)</span>
+                                        </div>
+
+                                        <!-- Arrows Split -->
+                                        <div class="hidden md:flex flex-col gap-8 text-2xl text-stone-300">
+                                            <div class="rotate-45 mb-2">➜</div>
+                                            <div class="-rotate-45 mt-2">➜</div>
+                                        </div>
+
+                                        <!-- Model & View -->
+                                        <div class="flex flex-col gap-4">
+                                            <div onclick="showMvcDetail('model')" class="cursor-pointer w-32 h-16 rounded-lg bg-emerald-500 text-white flex items-center justify-center shadow-lg hover:bg-emerald-600 transition transform hover:scale-105">
+                                                <span class="font-bold">Model</span>
+                                                <span class="ml-2 text-xs opacity-75">(DB)</span>
+                                            </div>
+                                            <div onclick="showMvcDetail('view')" class="cursor-pointer w-32 h-16 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-lg hover:bg-amber-600 transition transform hover:scale-105">
+                                                <span class="font-bold">View</span>
+                                                <span class="ml-2 text-xs opacity-75">(Jinja2)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="mvc-explanation" class="mt-8 p-4 bg-white border-l-4 border-sky-500 text-stone-700 min-h-[100px] transition-all">
+                                        Hãy click vào các thành phần ở trên để hiểu vai trò của chúng trong luồng xử lý của Flask.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- File Structure Comparison -->
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-bold text-stone-800">Cấu trúc Project</h3>
+                                    <div class="flex bg-stone-100 rounded p-1">
+                                        <button onclick="toggleStructure('basic')" id="btn-basic" class="px-3 py-1 text-sm rounded bg-white shadow text-stone-800 font-medium">Cơ bản</button>
+                                        <button onclick="toggleStructure('advanced')" id="btn-advanced" class="px-3 py-1 text-sm rounded text-stone-500 hover:text-stone-800">Chuẩn MVC</button>
+                                    </div>
+                                </div>
+                                
+                                <div id="structure-content" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- Dynamic Content by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    init: () => toggleStructure('basic')
+                },
+                {
+                    id: 'rest',
+                    title: '3. RESTful API & Best Practices',
+                    subtitle: 'Quy chuẩn giao tiếp hiện đại',
+                    readTime: '60 phút',
+                    content: `
+                        <div class="max-w-4xl mx-auto space-y-8">
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                                <h3 class="text-lg font-bold text-stone-800 mb-2">RESTful là gì?</h3>
+                                <p class="text-stone-600 mb-6">
+                                    REST (Representational State Transfer) là một kiểu kiến trúc phần mềm quy định cách các ứng dụng Web giao tiếp với nhau. 
+                                    Trong Mini Project này, chúng ta sẽ xây dựng API trả về <strong>JSON</strong> thay vì HTML.
+                                </p>
+
+                                <h4 class="font-bold text-stone-700 mb-3">Các HTTP Method chính</h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                                    <div class="bg-blue-50 border border-blue-200 p-4 rounded text-center">
+                                        <div class="text-xl font-black text-blue-600 mb-1">GET</div>
+                                        <div class="text-xs text-blue-800">Lấy dữ liệu</div>
+                                        <div class="text-xs text-stone-400 mt-2">An toàn, không thay đổi DB</div>
+                                    </div>
+                                    <div class="bg-green-50 border border-green-200 p-4 rounded text-center">
+                                        <div class="text-xl font-black text-green-600 mb-1">POST</div>
+                                        <div class="text-xs text-green-800">Tạo mới</div>
+                                        <div class="text-xs text-stone-400 mt-2">Thường dùng body JSON</div>
+                                    </div>
+                                    <div class="bg-amber-50 border border-amber-200 p-4 rounded text-center">
+                                        <div class="text-xl font-black text-amber-600 mb-1">PUT</div>
+                                        <div class="text-xs text-amber-800">Cập nhật</div>
+                                        <div class="text-xs text-stone-400 mt-2">Thay thế toàn bộ resource</div>
+                                    </div>
+                                    <div class="bg-red-50 border border-red-200 p-4 rounded text-center">
+                                        <div class="text-xl font-black text-red-600 mb-1">DELETE</div>
+                                        <div class="text-xs text-red-800">Xóa</div>
+                                        <div class="text-xs text-stone-400 mt-2">Xóa vĩnh viễn resource</div>
+                                    </div>
+                                </div>
+
+                                <h4 class="font-bold text-stone-700 mb-3">Mã phản hồi (Status Codes) quan trọng</h4>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full text-sm text-left">
+                                        <thead class="bg-stone-100 text-stone-700 font-bold">
+                                            <tr>
+                                                <th class="px-4 py-2">Code</th>
+                                                <th class="px-4 py-2">Ý nghĩa</th>
+                                                <th class="px-4 py-2">Khi nào dùng?</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-stone-100">
+                                            <tr>
+                                                <td class="px-4 py-2 font-mono text-green-600">200 OK</td>
+                                                <td class="px-4 py-2">Thành công</td>
+                                                <td class="px-4 py-2">GET thành công, PUT/DELETE thành công.</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-2 font-mono text-green-600">201 Created</td>
+                                                <td class="px-4 py-2">Đã tạo mới</td>
+                                                <td class="px-4 py-2">Sau khi POST thành công.</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-2 font-mono text-amber-600">400 Bad Request</td>
+                                                <td class="px-4 py-2">Lỗi từ Client</td>
+                                                <td class="px-4 py-2">Gửi thiếu dữ liệu, sai format JSON.</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-2 font-mono text-amber-600">404 Not Found</td>
+                                                <td class="px-4 py-2">Không tìm thấy</td>
+                                                <td class="px-4 py-2">ID không tồn tại trong DB.</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-2 font-mono text-red-600">500 Server Error</td>
+                                                <td class="px-4 py-2">Lỗi Server</td>
+                                                <td class="px-4 py-2">Code bị crash, DB lỗi kết nối.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-stone-50 p-6 border-l-4 border-sky-500 rounded-r-lg">
+                                <h4 class="font-bold text-sky-800">💡 Mẹo Best Practice</h4>
+                                <ul class="list-disc ml-5 mt-2 space-y-1 text-stone-700 text-sm">
+                                    <li>Luôn sử dụng danh từ số nhiều cho Endpoint: <code>/todos</code> thay vì <code>/get_todo</code>.</li>
+                                    <li>Sử dụng versioning cho API: <code>/api/v1/todos</code>.</li>
+                                    <li>Trả về JSON thống nhất: <code>{ "success": true, "data": ... }</code>.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `,
+                    init: () => {}
+                },
+                {
+                    id: 'project',
+                    title: '4. Mini Project: To-Do API',
+                    subtitle: 'Thực hành & Giả lập Postman',
+                    readTime: '120 phút',
+                    content: `
+                        <div class="max-w-4xl mx-auto space-y-8">
+                            <!-- Intro Project -->
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                                <h3 class="text-lg font-bold text-stone-800 mb-2">Đề bài: Xây dựng API quản lý công việc</h3>
+                                <p class="text-stone-600 mb-4">
+                                    Chúng ta sẽ xây dựng một Backend hoàn chỉnh với các chức năng:
+                                </p>
+                                <div class="flex flex-wrap gap-2 mb-6">
+                                    <span class="bg-stone-100 px-3 py-1 rounded text-xs font-mono">GET /todos</span>
+                                    <span class="bg-stone-100 px-3 py-1 rounded text-xs font-mono">POST /todos</span>
+                                    <span class="bg-stone-100 px-3 py-1 rounded text-xs font-mono">PUT /todos/&lt;id&gt;</span>
+                                    <span class="bg-stone-100 px-3 py-1 rounded text-xs font-mono">DELETE /todos/&lt;id&gt;</span>
+                                </div>
+                            </div>
+
+                            <!-- Implementation Steps -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200 h-full">
+                                    <h4 class="font-bold text-stone-800 mb-4 border-b pb-2">Bước 1: Model & Config</h4>
+                                    <div class="code-preview p-4 rounded text-xs overflow-x-auto">
+# app/models.py
+db = [] # Giả lập DB bằng List
+
+class Todo:
+    def __init__(self, title):
+        self.id = len(db) + 1
+        self.title = title
+        self.completed = False
+    
+    def to_json(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'completed': self.completed
+        }
+                                    </div>
+                                    <p class="text-xs text-stone-500 mt-2">Dùng list đơn giản thay vì SQL để tập trung vào logic API.</p>
+                                </div>
+
+                                <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200 h-full">
+                                    <h4 class="font-bold text-stone-800 mb-4 border-b pb-2">Bước 2: Controller (Routes)</h4>
+                                    <div class="code-preview p-4 rounded text-xs overflow-x-auto">
+# app/routes.py
+@app.route('/todos', methods=['GET'])
+def get_todos():
+    return jsonify([t.to_json() for t in db])
+
+@app.route('/todos', methods=['POST'])
+def create_todo():
+    if not request.json or 'title' not in request.json:
+        abort(400)
+    todo = Todo(request.json['title'])
+    db.append(todo)
+    return jsonify(todo.to_json()), 201
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Interactive Simulator -->
+                            <div class="bg-stone-900 p-6 rounded-xl shadow-lg border border-stone-700">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="text-lg font-bold text-white">📡 Trình giả lập API Client (Mini Postman)</h3>
+                                    <span class="text-xs bg-green-900 text-green-300 px-2 py-1 rounded">Server Status: Running</span>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    <!-- Request Panel -->
+                                    <div class="lg:col-span-1 space-y-4">
+                                        <div>
+                                            <label class="block text-xs text-stone-400 mb-1">Method</label>
+                                            <select id="api-method" onchange="updateApiForm()" class="w-full bg-stone-800 text-white text-sm p-2 rounded border border-stone-600 focus:border-sky-500 focus:outline-none">
+                                                <option value="GET">GET (Lấy danh sách)</option>
+                                                <option value="POST">POST (Thêm mới)</option>
+                                                <option value="DELETE">DELETE (Xóa)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-stone-400 mb-1">Endpoint</label>
+                                            <input type="text" value="/api/v1/todos" disabled class="w-full bg-stone-800 text-stone-500 text-sm p-2 rounded border border-stone-600 cursor-not-allowed">
+                                        </div>
+                                        <div id="api-body-group" class="hidden">
+                                            <label class="block text-xs text-stone-400 mb-1">Body (JSON)</label>
+                                            <textarea id="api-body" class="w-full bg-stone-800 text-white text-sm p-2 rounded border border-stone-600 font-mono h-24">{ "title": "Học Flask" }</textarea>
+                                        </div>
+                                        <div id="api-id-group" class="hidden">
+                                             <label class="block text-xs text-stone-400 mb-1">Todo ID</label>
+                                             <input type="number" id="api-id" placeholder="1" class="w-full bg-stone-800 text-white text-sm p-2 rounded border border-stone-600">
+                                        </div>
+                                        <button onclick="sendApiRequest()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded transition">Gửi Request</button>
+                                    </div>
+
+                                    <!-- Response Panel -->
+                                    <div class="lg:col-span-2 bg-stone-950 rounded p-4 font-mono text-xs text-green-400 border border-stone-800 h-64 overflow-y-auto relative">
+                                        <div class="absolute top-2 right-2 text-stone-600 text-[10px]">Response Console</div>
+                                        <pre id="api-response" class="whitespace-pre-wrap">Waiting for request...</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    init: () => {
+                        updateApiForm();
+                        // Reset simulated DB for fresh view
+                        simulatedDb = [
+                            { id: 1, title: "Cài đặt môi trường Python", completed: true },
+                            { id: 2, title: "Xem video bài giảng Day 1", completed: false }
+                        ];
+                    }
+                }
+            ]
+        };
+
+        let currentModuleIndex = 0;
+        let simulatedDb = []; // Init in module init
+
+        // --- INIT APP ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderNav();
+            loadModule(0);
+        });
+
+        // --- NAVIGATION LOGIC ---
+        function renderNav() {
+            const container = document.getElementById('nav-container');
+            container.innerHTML = courseData.modules.map((mod, index) => `
+                <a href="#" onclick="loadModule(${index})" 
+                   class="nav-item group flex items-center px-6 py-3 text-sm font-medium text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors ${index === currentModuleIndex ? 'active' : ''}">
+                    <span class="mr-3 h-6 w-6 flex items-center justify-center rounded-full border border-stone-300 text-xs ${index === currentModuleIndex ? 'bg-sky-500 border-sky-500 text-white' : 'group-hover:border-stone-400'}">
+                        ${index + 1}
+                    </span>
+                    ${mod.title.split('. ')[1]}
+                </a>
+            `).join('');
+            
+            // Update Progress
+            const progress = ((currentModuleIndex + 1) / courseData.modules.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('progress-text').innerText = `${Math.round(progress)}% Hoàn thành`;
+        }
+
+        function loadModule(index) {
+            currentModuleIndex = index;
+            const mod = courseData.modules[index];
+            
+            // Update Header
+            document.getElementById('page-title').innerText = mod.title;
+            document.getElementById('page-subtitle').innerText = `${mod.subtitle} • Thời gian đọc: ${mod.readTime}`;
+            
+            // Update Content with animation
+            const contentArea = document.getElementById('content-area');
+            contentArea.classList.remove('fade-in');
+            void contentArea.offsetWidth; // Trigger reflow
+            contentArea.innerHTML = mod.content;
+            contentArea.classList.add('fade-in');
+            
+            // Re-render Nav to update active state
+            renderNav();
+            
+            // Scroll to top
+            contentArea.scrollTop = 0;
+
+            // Execute specific init scripts for this module
+            if (mod.init) mod.init();
+        }
+
+        function toggleResources() {
+            const modal = document.getElementById('resources-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        // --- MODULE 1: CHART LOGIC ---
+        function initComparisonChart() {
+            const ctx = document.getElementById('comparisonChart');
+            if (!ctx) return;
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Độ phức tạp ban đầu', 'Tính linh hoạt', 'Quy mô code (Hello World)'],
+                    datasets: [
+                        {
+                            label: 'Flask',
+                            data: [2, 9, 2],
+                            backgroundColor: 'rgba(14, 165, 233, 0.8)', // Sky 500
+                            borderColor: 'rgb(14, 165, 233)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Django',
+                            data: [8, 4, 8],
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)', // Emerald 500
+                            borderColor: 'rgb(16, 185, 129)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            title: { display: true, text: 'Thang điểm (1-10)' }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + '/10';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- MODULE 2: MVC INTERACTION ---
+        function showMvcDetail(part) {
+            const box = document.getElementById('mvc-explanation');
+            const data = {
+                'user': '<strong>User (Người dùng):</strong> Gửi yêu cầu HTTP (GET, POST...) thông qua trình duyệt hoặc API Client.',
+                'controller': '<strong>Controller (Routes):</strong> Nhận yêu cầu, xử lý logic nghiệp vụ, gọi Model để lấy dữ liệu, và chọn View để trả về. Trong Flask, đây là các hàm được gắn decorator <code>@app.route</code>.',
+                'model': '<strong>Model (Database):</strong> Đại diện cho cấu trúc dữ liệu. Tương tác trực tiếp với Database (SQL/NoSQL) để thêm, sửa, xóa, lấy dữ liệu.',
+                'view': '<strong>View (Templates/JSON):</strong> Dữ liệu hiển thị cuối cùng trả về cho User. Có thể là trang HTML (render_template) hoặc chuỗi JSON (jsonify).'
+            };
+            box.innerHTML = data[part] || 'Chọn thành phần để xem chi tiết.';
+            box.style.opacity = 0;
+            setTimeout(() => { box.style.opacity = 1; }, 50);
+        }
+
+        function toggleStructure(type) {
+            const basicBtn = document.getElementById('btn-basic');
+            const advBtn = document.getElementById('btn-advanced');
+            const content = document.getElementById('structure-content');
+            
+            if (type === 'basic') {
+                basicBtn.className = "px-3 py-1 text-sm rounded bg-white shadow text-stone-800 font-medium";
+                advBtn.className = "px-3 py-1 text-sm rounded text-stone-500 hover:text-stone-800";
+                
+                content.innerHTML = `
+                    <div class="code-preview p-4 rounded text-sm">
+my_project/
+├── app.py          # Tất cả code ở đây
+├── templates/
+│   └── index.html
+└── static/
+    └── style.css
+                    </div>
+                    <div class="p-4 bg-amber-50 rounded text-amber-800 text-sm">
+                        <h5 class="font-bold">Đánh giá: Dành cho Demo</h5>
+                        <p>Toàn bộ logic dồn vào 1 file <code>app.py</code>. Rất khó bảo trì khi dự án lớn lên.</p>
+                    </div>
+                `;
+            } else {
+                basicBtn.className = "px-3 py-1 text-sm rounded text-stone-500 hover:text-stone-800";
+                advBtn.className = "px-3 py-1 text-sm rounded bg-white shadow text-stone-800 font-medium";
+                
+                content.innerHTML = `
+                    <div class="code-preview p-4 rounded text-sm">
+my_project/
+├── run.py            # Entry point
+├── config.py         # Configs
+├── app/              # Package chính
+│   ├── __init__.py   # Init Flask app
+│   ├── routes.py     # Controller
+│   ├── models.py     # Database models
+│   └── templates/    # Views
+└── requirements.txt
+                    </div>
+                    <div class="p-4 bg-green-50 rounded text-green-800 text-sm">
+                        <h5 class="font-bold">Đánh giá: Chuyên nghiệp</h5>
+                        <p>Tách biệt rõ ràng các thành phần (Separation of Concerns). Dễ dàng mở rộng và làm việc nhóm.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // --- MODULE 4: API SIMULATOR ---
+        function updateApiForm() {
+            const method = document.getElementById('api-method').value;
+            const bodyGroup = document.getElementById('api-body-group');
+            const idGroup = document.getElementById('api-id-group');
+            
+            if (method === 'POST') {
+                bodyGroup.classList.remove('hidden');
+                idGroup.classList.add('hidden');
+            } else if (method === 'DELETE') {
+                bodyGroup.classList.add('hidden');
+                idGroup.classList.remove('hidden');
+            } else { // GET
+                bodyGroup.classList.add('hidden');
+                idGroup.classList.add('hidden');
+            }
+        }
+
+        function sendApiRequest() {
+            const method = document.getElementById('api-method').value;
+            const output = document.getElementById('api-response');
+            
+            output.innerText = "Sending request...";
+            
+            // Simulate Network Delay
+            setTimeout(() => {
+                let response = {};
+                let status = 200;
+                let statusText = "OK";
+
+                try {
+                    if (method === 'GET') {
+                        response = { success: true, count: simulatedDb.length, data: simulatedDb };
+                    } 
+                    else if (method === 'POST') {
+                        const bodyRaw = document.getElementById('api-body').value;
+                        const body = JSON.parse(bodyRaw);
+                        if (!body.title) throw new Error("Missing 'title'");
+                        
+                        const newTodo = {
+                            id: simulatedDb.length + 1,
+                            title: body.title,
+                            completed: false
+                        };
+                        simulatedDb.push(newTodo);
+                        response = { success: true, data: newTodo };
+                        status = 201; statusText = "Created";
+                    } 
+                    else if (method === 'DELETE') {
+                        const id = parseInt(document.getElementById('api-id').value);
+                        if (!id) throw new Error("Missing ID");
+                        
+                        const initialLen = simulatedDb.length;
+                        simulatedDb = simulatedDb.filter(t => t.id !== id);
+                        
+                        if (simulatedDb.length === initialLen) {
+                            status = 404; statusText = "Not Found";
+                            response = { success: false, error: "ID không tồn tại" };
+                        } else {
+                            response = { success: true, message: `Deleted ID ${id}` };
+                        }
+                    }
+
+                    // Format Output
+                    output.innerHTML = `<span class="${status >= 400 ? 'text-red-400' : 'text-green-400'} font-bold">HTTP/1.1 ${status} ${statusText}</span>\n` + 
+                                       JSON.stringify(response, null, 4);
+                } catch (e) {
+                    output.innerHTML = `<span class="text-amber-400 font-bold">HTTP/1.1 400 Bad Request</span>\n` + 
+                                       JSON.stringify({ success: false, error: e.message || "Invalid JSON" }, null, 4);
+                }
+            }, 600);
+        }
+    </script>
+</body>
+</html>
