@@ -3,352 +3,655 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Khóa Học: Template & Postman Mastery</title>
+    <title>Khóa Học: Template Engine & Postman Mastery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chosen Palette: Warm Neutrals & Academic Calm -->
-    <!-- Primary Background: #fdfbf7 (Creamy White) -->
-    <!-- Secondary/Cards: #ffffff (White) -->
-    <!-- Text: #1f2937 (Gray-900) -->
-    <!-- Accents: #e0f2fe (Light Blue for Tech), #fef3c7 (Soft Amber for Highlights) -->
+    <!-- Chosen Palette: Tech Education Professional -->
+    <!-- Background: #f8fafc (Slate-50) -->
+    <!-- Primary: #0f172a (Slate-900) -->
+    <!-- Accent: #3b82f6 (Blue-500) & #f59e0b (Amber-500) -->
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fdfbf7; color: #1f2937; }
-        .nav-item.active { border-bottom: 2px solid #ea580c; color: #ea580c; font-weight: 600; }
-        .code-block { font-family: 'Consolas', 'Monaco', monospace; background-color: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
-        .keyword { color: #569cd6; }
-        .string { color: #ce9178; }
-        .function { color: #dcdcaa; }
-        .variable { color: #9cdcfe; }
-        .chart-container { position: relative; width: 100%; max-width: 600px; margin: 0 auto; height: 300px; max-height: 400px; }
-        .folder-tree { padding-left: 20px; border-left: 1px dashed #cbd5e1; }
-        .sim-input { border: 1px solid #d1d5db; padding: 0.5rem; border-radius: 0.375rem; width: 100%; }
-        /* Custom scrollbar for better aesthetics */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #334155; }
+        .nav-btn.active { background-color: #eff6ff; color: #2563eb; border-left: 4px solid #2563eb; }
+        .code-editor { font-family: 'Fira Code', 'Consolas', monospace; background-color: #1e293b; color: #e2e8f0; }
+        .chart-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            height: 300px; 
+            max-height: 400px; 
+        }
+        .sim-console { font-family: 'Courier New', monospace; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
-    <!-- Application Structure Plan: 
-         Structure: A linear "1-Week Module" based learning path, but presented as a tabbed dashboard for quick access.
-         Rationale: Students need to see the progression from Theory -> Template Engine -> Static Files -> API Testing -> Documentation -> Practice.
-         Key Interactions:
-         1. "Jinja2 Simulator": Allows students to type data and see real-time string replacement to understand Server-Side Rendering (SSR).
-         2. "Postman Emulator": A simplified UI within the app to teach the concept of Request/Response without leaving the browser.
-         3. Dynamic Quizzes: At the end of sections to reinforce knowledge.
-         4. Progress Tracking: Simple visual indicators of completed modules.
+    <!-- Application Structure Plan:
+         Designed as a "Developer Dashboard" learning environment.
+         1. Sidebar Navigation: persistent access to the 5 key modules (Curriculum flow).
+         2. Central Content Area: Dynamic switching based on selection.
+         3. Interactive Sandboxes: Embedded directly into theory sections (Jinja2 Lab, Postman Lab) to bridge theory and practice immediately.
+         4. "Senior Dev Tips": Callout boxes simulating advice from a mentor.
     -->
     <!-- Visualization & Content Choices:
-         1. Chart.js (Doughnut): To visualize the "Request Cycle" breakdown (Time spent in DB vs Logic vs Rendering). Goal: Explain performance implications.
-         2. Chart.js (Bar): Comparison of SSR vs CSR vs Static usage. Goal: Contextualize where Jinja2 fits in modern web dev.
-         3. HTML/CSS Diagrams: Folder structures for Static Files. Goal: Visual memory aid for project setup.
-         4. Interactive Code Blocks: Copyable and readable syntax highlighting.
+         1. Doughnut Chart: Visualizing the "Full Stack" workload distribution to contextulize Server-Side Rendering.
+         2. Bar Chart: HTTP Method frequency in typical CRUD apps.
+         3. Interactive Inputs: Real-time Jinja2 rendering to demystify variable substitution.
+         4. Simulated Terminal: To show API responses without needing a backend.
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="flex flex-col md:flex-row min-h-screen">
 
-    <!-- Navigation Bar -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <span class="text-2xl font-bold text-orange-600">Dev<span class="text-gray-800">Edu</span></span>
-                    <span class="ml-2 text-sm text-gray-500 hidden md:block">| Template & Postman Masterclass</span>
-                </div>
-                <div class="hidden md:flex space-x-8 items-center" id="nav-container">
-                    <!-- Nav items injected by JS -->
-                </div>
-                <div class="flex items-center md:hidden">
-                    <button id="mobile-menu-btn" class="text-gray-500 hover:text-gray-700">☰</button>
-                </div>
+    <!-- Mobile Header -->
+    <div class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
+        <span class="font-bold text-lg">DevMastery: API & Templates</span>
+        <button id="mobile-menu-btn" class="p-2 focus:outline-none">☰</button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="hidden md:flex flex-col w-full md:w-64 bg-white border-r border-slate-200 h-screen sticky top-0 overflow-y-auto z-40">
+        <div class="p-6 border-b border-slate-100">
+            <h1 class="text-xl font-bold text-slate-800">DevMastery</h1>
+            <p class="text-xs text-slate-500 mt-1">Template & Postman Course</p>
+        </div>
+        <nav class="flex-1 py-4 space-y-1" id="nav-container">
+            <!-- Nav Items Injected via JS -->
+        </nav>
+        <div class="p-4 bg-slate-50 border-t border-slate-200">
+            <div class="flex items-center space-x-2">
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span class="text-xs font-medium text-slate-600">System Online</span>
             </div>
         </div>
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 px-4 py-2 space-y-2"></div>
-    </nav>
+    </aside>
 
-    <!-- Main Content Area -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        
-        <!-- Welcome / Dashboard View -->
-        <div id="view-dashboard" class="content-view space-y-8">
-            <div class="text-center space-y-4">
-                <h1 class="text-4xl font-bold text-gray-900">Chào mừng các bạn đến với chủ đề Template & API Testing</h1>
-                <p class="text-xl text-gray-600 max-w-2xl mx-auto">Lộ trình 1 tuần từ việc hiểu cơ chế render HTML phía server đến việc kiểm thử API chuyên nghiệp bằng Postman.</p>
-            </div>
+    <!-- Main Content -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto h-full" id="main-content">
+        <!-- Content Views Injected via JS -->
+    </main>
 
-            <!-- Learning Path Overview -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-                <!-- Cards injected by JS -->
-            </div>
+    <!-- JavaScript Application Logic -->
+    <script>
+        // --- Course Content Data ---
+        const courseData = {
+            modules: [
+                {
+                    id: 'overview',
+                    title: 'Tổng quan khóa học',
+                    icon: '📌',
+                    content: `
+                        <div class="fade-in max-w-4xl mx-auto space-y-8">
+                            <div class="text-center space-y-4 mb-10">
+                                <h1 class="text-4xl font-bold text-slate-900">Master Template Engine & API Testing</h1>
+                                <p class="text-lg text-slate-600">Lộ trình 1 tuần từ Server-Side Rendering đến kiểm thử API chuyên nghiệp.</p>
+                            </div>
 
-            <!-- Intro Context -->
-            <div class="bg-white rounded-xl shadow-sm p-6 mt-8 border border-gray-100">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Tại sao học chủ đề này?</h2>
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div>
-                        <p class="text-gray-600 leading-relaxed mb-4">
-                            Trong phát triển Web Back-end, việc trả về dữ liệu không chỉ dừng lại ở JSON. Đôi khi chúng ta cần trả về giao diện HTML hoàn chỉnh (Server-Side Rendering). 
-                            Đồng thời, khi xây dựng API, việc kiểm thử thủ công bằng trình duyệt là không đủ. Đó là lúc Template Engine (Jinja2) và API Client (Postman) trở thành công cụ không thể thiếu.
-                        </p>
-                        <ul class="space-y-2 text-gray-600">
-                            <li class="flex items-center">✅ <strong>Jinja2:</strong> Giúp tách biệt logic code và giao diện HTML.</li>
-                            <li class="flex items-center">✅ <strong>Static Files:</strong> Quản lý CSS/JS/Images hiệu quả.</li>
-                            <li class="flex items-center">✅ <strong>Postman:</strong> Công cụ tiêu chuẩn để test và document API.</li>
-                        </ul>
-                    </div>
-                    <div class="bg-orange-50 rounded-lg p-6 flex flex-col justify-center items-center">
-                        <h3 class="font-semibold text-orange-800 mb-2">Thống kê xu hướng phát triển Web</h3>
-                        <div class="chart-container">
-                            <canvas id="introChart"></canvas>
-                        </div>
-                        <p class="text-xs text-center text-gray-500 mt-2">Tỷ lệ các dự án sử dụng Template Engine vs Framework Frontend</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                                    <h3 class="text-lg font-bold text-slate-800 mb-4">🎯 Mục tiêu khóa học</h3>
+                                    <ul class="space-y-3 text-slate-600">
+                                        <li class="flex items-start"><span class="mr-2 text-green-500">✓</span> Hiểu cơ chế hoạt động của Template Engine (Jinja2).</li>
+                                        <li class="flex items-start"><span class="mr-2 text-green-500">✓</span> Quản lý Static Files (CSS/JS) trong dự án Backend.</li>
+                                        <li class="flex items-start"><span class="mr-2 text-green-500">✓</span> Sử dụng thành thạo Postman để test API.</li>
+                                        <li class="flex items-start"><span class="mr-2 text-green-500">✓</span> Viết tài liệu API cơ bản cho team Frontend.</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center">
+                                    <h3 class="text-lg font-bold text-slate-800 mb-2">Thị phần kiến trúc Web</h3>
+                                    <div class="chart-container">
+                                        <canvas id="overviewChart"></canvas>
+                                    </div>
+                                    <p class="text-xs text-center text-slate-400 mt-2">Server-Side Rendering (SSR) vẫn chiếm vai trò quan trọng bên cạnh SPA.</p>
+                                </div>
+                            </div>
 
-        <!-- Module 1: Jinja2 Basic -->
-        <div id="view-module1" class="content-view hidden space-y-8">
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
-                <h2 class="text-3xl font-bold text-gray-900">Module 1: Render HTML với Jinja2</h2>
-                <p class="mt-2 text-gray-600">Tìm hiểu cách Python "bơm" dữ liệu vào khung xương HTML động.</p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Theory -->
-                <div class="space-y-6">
-                    <div class="bg-white p-6 rounded-lg shadow-sm">
-                        <h3 class="text-xl font-bold text-gray-800 mb-3">1. Khái niệm Template Engine</h3>
-                        <p class="text-gray-600 mb-4">Template Engine giống như việc điền vào chỗ trống. Bạn có một văn bản mẫu (Template) và các dữ liệu rời rạc (Variables). Engine sẽ kết hợp chúng lại thành một văn bản hoàn chỉnh.</p>
-                        <div class="bg-gray-100 p-4 rounded text-sm">
-                            <p><strong>Input:</strong> "Xin chào {{ name }}!"</p>
-                            <p><strong>Data:</strong> name = "Sinh viên"</p>
-                            <p><strong>Output:</strong> "Xin chào Sinh viên!"</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-lg shadow-sm">
-                        <h3 class="text-xl font-bold text-gray-800 mb-3">2. Cấu trúc thư mục chuẩn</h3>
-                        <div class="folder-tree text-sm font-mono text-gray-700">
-                            project_folder/<br>
-                            ├── app.py (File chạy chính)<br>
-                            ├── <span class="text-blue-600 font-bold">templates/</span> (Chứa file HTML)<br>
-                            │   ├── index.html<br>
-                            │   └── base.html<br>
-                            └── static/ (CSS, JS, Ảnh)
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2 italic">Lưu ý: Thư mục tên phải chính xác là "templates" nếu dùng Flask mặc định.</p>
-                    </div>
-                </div>
-
-                <!-- Simulator -->
-                <div class="bg-gray-900 p-6 rounded-xl shadow-lg text-white">
-                    <h3 class="text-xl font-bold text-blue-400 mb-4">🔮 Jinja2 Simulator</h3>
-                    <p class="text-sm text-gray-400 mb-4">Thử thay đổi biến <code>user</code> và xem kết quả render ngay lập tức.</p>
-                    
-                    <div class="grid grid-cols-1 gap-4">
-                        <div>
-                            <label class="text-xs text-gray-500 uppercase">Template (HTML)</label>
-                            <div class="font-mono text-sm bg-gray-800 p-2 rounded">
-                                &lt;div class="card"&gt;<br>
-                                &nbsp;&nbsp;&lt;h1&gt;Hồ sơ: <span class="text-yellow-400">{{ user.name }}</span>&lt;/h1&gt;<br>
-                                &nbsp;&nbsp;&lt;p&gt;Vai trò: <span class="text-yellow-400">{{ user.role }}</span>&lt;/p&gt;<br>
-                                &nbsp;&nbsp;&lt;span&gt;Trạng thái: <span class="text-yellow-400">{% if user.active %}Online{% else %}Offline{% endif %}</span>&lt;/span&gt;<br>
-                                &lt;/div&gt;
+                            <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+                                <h4 class="font-bold text-blue-900 text-lg mb-2">💡 Senior Dev Note:</h4>
+                                <p class="text-blue-800 italic">"Nhiều bạn sinh viên chỉ học React/Vue mà bỏ qua Template Engine. Nhưng thực tế, các hệ thống gửi Email Marketing, báo cáo PDF, hay các trang Admin CMS nội bộ vẫn dùng Template Engine rất nhiều vì sự đơn giản và tốc độ phát triển cực nhanh của nó."</p>
                             </div>
                         </div>
+                    `
+                },
+                {
+                    id: 'jinja2',
+                    title: 'Module 1: Jinja2 & HTML',
+                    icon: '🔧',
+                    content: `
+                        <div class="fade-in max-w-4xl mx-auto space-y-8">
+                            <div class="border-b border-slate-200 pb-4">
+                                <h2 class="text-3xl font-bold text-slate-900">Render HTML với Jinja2</h2>
+                                <p class="text-slate-500 mt-2">Tách biệt logic Python và giao diện HTML.</p>
+                            </div>
 
-                        <div>
-                            <label class="text-xs text-gray-500 uppercase">Python Data (JSON)</label>
-                            <textarea id="jinja-data" class="w-full h-32 bg-gray-800 text-green-400 font-mono text-sm p-2 rounded border border-gray-700" oninput="updateJinjaSim()">
+                            <div class="grid lg:grid-cols-2 gap-8">
+                                <div class="space-y-6">
+                                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-100">
+                                        <h3 class="font-bold text-slate-800 mb-2">1. Khái niệm cơ bản</h3>
+                                        <p class="text-slate-600 text-sm leading-relaxed">
+                                            HTML tĩnh là cố định. Để hiển thị dữ liệu động (tên user, danh sách sản phẩm), ta cần một "cỗ máy" điền dữ liệu vào chỗ trống. Đó là Template Engine.
+                                        </p>
+                                        <div class="mt-4 bg-slate-100 p-3 rounded text-sm font-mono">
+                                            <span class="text-purple-600">{{ variable }}</span> : In giá trị biến<br>
+                                            <span class="text-purple-600">{% code %}</span> : Logic (if, for loop)
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-100">
+                                        <h3 class="font-bold text-slate-800 mb-2">2. Các lỗi thường gặp</h3>
+                                        <ul class="list-disc list-inside text-sm text-slate-600 space-y-2">
+                                            <li>Quên đặt file HTML vào folder <code>templates</code>.</li>
+                                            <li>Nhầm lẫn giữa cú pháp <code>{{ '{{' }} }}</code> và <code>{% '{{' }}%</code>.</li>
+                                            <li>Logic xử lý dữ liệu phức tạp nằm trong HTML thay vì Python (Sai nguyên tắc MVC).</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Interactive Simulator -->
+                                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-xl flex flex-col h-full">
+                                    <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 flex justify-between items-center">
+                                        <span class="text-white font-bold text-sm">💻 Jinja2 Live Simulator</span>
+                                        <span class="text-xs text-green-400">● Live Preview</span>
+                                    </div>
+                                    <div class="p-4 space-y-4 flex-1 overflow-y-auto">
+                                        <div>
+                                            <label class="text-xs text-slate-400 uppercase font-bold">1. Python Data (JSON)</label>
+                                            <textarea id="jinja-data" class="w-full h-24 bg-slate-950 text-green-400 code-editor p-2 rounded text-sm border border-slate-700 focus:border-blue-500 focus:outline-none" spellcheck="false">
 {
-  "name": "Nguyễn Văn A",
-  "role": "Admin",
-  "active": true
+  "user": "Minh Tú",
+  "score": 85,
+  "is_admin": true
 }</textarea>
-                        </div>
-
-                        <div>
-                            <label class="text-xs text-gray-500 uppercase">Rendered Output</label>
-                            <div id="jinja-result" class="bg-white text-gray-900 p-4 rounded min-h-[100px] border-l-4 border-green-500">
-                                <!-- JS will populate this -->
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-slate-400 uppercase font-bold">2. Template Code</label>
+                                            <div class="bg-slate-800 p-2 rounded text-sm code-editor text-slate-300">
+                                                &lt;div class="card"&gt;<br>
+                                                &nbsp;&nbsp;&lt;h3&gt;Xin chào, <span class="text-yellow-400">{{ user }}</span>&lt;/h3&gt;<br>
+                                                &nbsp;&nbsp;&lt;p&gt;Điểm số: <span class="text-yellow-400">{{ score }}</span>&lt;/p&gt;<br>
+                                                &nbsp;&nbsp;<span class="text-purple-400">{% if is_admin %}</span><br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;&lt;button&gt;Xóa User&lt;/button&gt;<br>
+                                                &nbsp;&nbsp;<span class="text-purple-400">{% else %}</span><br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;&lt;span&gt;User thường&lt;/span&gt;<br>
+                                                &nbsp;&nbsp;<span class="text-purple-400">{% endif %}</span><br>
+                                                &lt;/div&gt;
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-slate-400 uppercase font-bold">3. Kết quả Render (HTML)</label>
+                                            <div id="jinja-output" class="bg-white p-4 rounded min-h-[80px] text-slate-800 border-l-4 border-green-500">
+                                                <!-- JS Rendered Output -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
+                    `
+                },
+                {
+                    id: 'static',
+                    title: 'Module 2: Static Files',
+                    icon: '📁',
+                    content: `
+                        <div class="fade-in max-w-4xl mx-auto space-y-8">
+                             <div class="border-b border-slate-200 pb-4">
+                                <h2 class="text-3xl font-bold text-slate-900">Static Files & Cấu Trúc Dự Án</h2>
+                                <p class="text-slate-500 mt-2">Quản lý CSS, JS, Hình ảnh trong môi trường Backend.</p>
+                            </div>
+
+                            <!-- Structure Visualization -->
+                            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-8 items-start">
+                                <div class="flex-1">
+                                    <h3 class="font-bold text-slate-800 mb-4">Cấu trúc thư mục chuẩn (Flask/Django)</h3>
+                                    <div class="font-mono text-sm bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                        my_project/<br>
+                                        ├── app.py<br>
+                                        ├── <span class="text-blue-600 font-bold">templates/</span> <span class="text-slate-400 text-xs">// Chứa file HTML</span><br>
+                                        │   └── index.html<br>
+                                        └── <span class="text-amber-600 font-bold">static/</span> <span class="text-slate-400 text-xs">// Chứa file tĩnh</span><br>
+                                            ├── css/<br>
+                                            │   └── style.css<br>
+                                            ├── js/<br>
+                                            │   └── main.js<br>
+                                            └── img/<br>
+                                                └── logo.png
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-3">⚠️ Server sẽ không cho phép truy cập trực tiếp file trừ khi nó nằm trong thư mục static được cấu hình.</p>
+                                </div>
+                                <div class="flex-1 space-y-4">
+                                    <h3 class="font-bold text-slate-800">Cách gọi trong HTML</h3>
+                                    <div class="bg-slate-800 text-white p-4 rounded-lg code-editor text-sm shadow-inner">
+                                        <span class="text-slate-400">&lt;!-- Cách SAI (Đường dẫn cứng) --&gt;</span><br>
+                                        <span class="text-red-400">&lt;img src="/home/user/project/img/logo.png"&gt;</span><br><br>
+                                        
+                                        <span class="text-slate-400">&lt;!-- Cách ĐÚNG (Dynamic URL) --&gt;</span><br>
+                                        <span class="text-green-400">&lt;img src="{{ url_for('static', filename='img/logo.png') }}"&gt;</span>
+                                    </div>
+                                    <div class="bg-amber-50 border border-amber-200 p-4 rounded text-sm text-amber-800">
+                                        <strong>Tại sao?</strong> Khi deploy lên server thật, đường dẫn thư mục sẽ thay đổi. Dùng hàm <code>url_for</code> giúp link luôn đúng dù web chạy ở đâu.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    id: 'postman',
+                    title: 'Module 3: Postman & API',
+                    icon: '🚀',
+                    content: `
+                        <div class="fade-in max-w-4xl mx-auto space-y-8">
+                             <div class="border-b border-slate-200 pb-4">
+                                <h2 class="text-3xl font-bold text-slate-900">Postman & Kiểm thử API</h2>
+                                <p class="text-slate-500 mt-2">Giao tiếp với Server không cần giao diện người dùng.</p>
+                            </div>
+
+                            <!-- Theory Cards -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="bg-green-50 p-4 rounded border border-green-200 text-center">
+                                    <h3 class="font-bold text-green-700">GET</h3>
+                                    <p class="text-xs text-green-800 mt-1">Lấy dữ liệu</p>
+                                </div>
+                                <div class="bg-amber-50 p-4 rounded border border-amber-200 text-center">
+                                    <h3 class="font-bold text-amber-700">POST</h3>
+                                    <p class="text-xs text-amber-800 mt-1">Tạo mới</p>
+                                </div>
+                                <div class="bg-blue-50 p-4 rounded border border-blue-200 text-center">
+                                    <h3 class="font-bold text-blue-700">PUT</h3>
+                                    <p class="text-xs text-blue-800 mt-1">Cập nhật</p>
+                                </div>
+                                <div class="bg-red-50 p-4 rounded border border-red-200 text-center">
+                                    <h3 class="font-bold text-red-700">DELETE</h3>
+                                    <p class="text-xs text-red-800 mt-1">Xóa</p>
+                                </div>
+                            </div>
+
+                            <!-- Postman Emulator -->
+                            <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                                <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-orange-500 font-bold">Postman</span>
+                                        <span class="text-slate-500 text-sm">Emulator Mode</span>
+                                    </div>
+                                    <div class="flex space-x-1">
+                                        <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                                        <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                                        <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 md:p-6 space-y-4">
+                                    <!-- URL Bar -->
+                                    <div class="flex flex-col md:flex-row gap-2">
+                                        <select id="pm-method" class="bg-slate-50 border border-slate-300 text-slate-900 font-bold rounded px-3 py-2 w-full md:w-32 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                            <option value="GET">GET</option>
+                                            <option value="POST">POST</option>
+                                            <option value="PUT">PUT</option>
+                                            <option value="DELETE">DELETE</option>
+                                        </select>
+                                        <input type="text" id="pm-url" value="https://api.myproject.com/users" class="flex-1 bg-slate-50 border border-slate-300 rounded px-3 py-2 font-mono text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                        <button onclick="runPostmanSim()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition-colors shadow-sm">Send</button>
+                                    </div>
+
+                                    <!-- Params/Body Area -->
+                                    <div class="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="text-xs font-bold text-slate-500 mb-1 block">Request Body (JSON)</label>
+                                            <textarea id="pm-body" class="w-full h-40 bg-slate-50 border border-slate-300 rounded p-2 font-mono text-sm text-slate-700 focus:border-blue-500 focus:outline-none" placeholder='{ "name": "New User" }'></textarea>
+                                        </div>
+                                        <div>
+                                            <div class="flex justify-between items-center mb-1">
+                                                <label class="text-xs font-bold text-slate-500 block">Response</label>
+                                                <span id="pm-status" class="text-xs font-mono px-2 py-0.5 rounded bg-slate-200 text-slate-600">No Request</span>
+                                            </div>
+                                            <div id="pm-response" class="w-full h-40 bg-slate-900 rounded p-4 font-mono text-xs text-green-400 overflow-y-auto">
+                                                // Response data will appear here...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    id: 'docs',
+                    title: 'Module 4: API Docs',
+                    icon: '📝',
+                    content: `
+                        <div class="fade-in max-w-4xl mx-auto space-y-8">
+                             <div class="border-b border-slate-200 pb-4">
+                                <h2 class="text-3xl font-bold text-slate-900">API Documentation</h2>
+                                <p class="text-slate-500 mt-2">Tài liệu là cầu nối giữa Backend và Frontend/Mobile.</p>
+                            </div>
+
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                                <h3 class="font-bold text-slate-800 mb-4">Các thành phần bắt buộc của tài liệu API</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm text-left text-slate-600">
+                                        <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                                            <tr>
+                                                <th class="px-6 py-3">Thành phần</th>
+                                                <th class="px-6 py-3">Mô tả</th>
+                                                <th class="px-6 py-3">Ví dụ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="bg-white border-b">
+                                                <td class="px-6 py-4 font-medium text-slate-900">Endpoint</td>
+                                                <td class="px-6 py-4">Đường dẫn URL</td>
+                                                <td class="px-6 py-4 font-mono text-blue-600">/api/v1/products</td>
+                                            </tr>
+                                            <tr class="bg-white border-b">
+                                                <td class="px-6 py-4 font-medium text-slate-900">Method</td>
+                                                <td class="px-6 py-4">Hành động (GET/POST...)</td>
+                                                <td class="px-6 py-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">GET</span></td>
+                                            </tr>
+                                            <tr class="bg-white border-b">
+                                                <td class="px-6 py-4 font-medium text-slate-900">Payload</td>
+                                                <td class="px-6 py-4">Dữ liệu gửi lên</td>
+                                                <td class="px-6 py-4 font-mono text-xs">{ "id": 1, "qty": 5 }</td>
+                                            </tr>
+                                            <tr class="bg-white">
+                                                <td class="px-6 py-4 font-medium text-slate-900">Responses</td>
+                                                <td class="px-6 py-4">Các trường hợp trả về (200, 400, 500)</td>
+                                                <td class="px-6 py-4 font-mono text-xs">200 OK: { "success": true }</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    id: 'practice',
+                    title: 'Bài tập & Quiz',
+                    icon: '🎓',
+                    content: `
+                        <div class="fade-in max-w-4xl mx-auto space-y-8">
+                            <div class="border-b border-slate-200 pb-4">
+                                <h2 class="text-3xl font-bold text-slate-900">Thực hành & Kiểm tra</h2>
+                                <p class="text-slate-500 mt-2">Tổng hợp kiến thức đã học.</p>
+                            </div>
+
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                                    <h3 class="text-xl font-bold text-slate-800 mb-4">📝 Bài tập tuần</h3>
+                                    <div class="space-y-4">
+                                        <div class="flex items-start">
+                                            <input type="checkbox" class="mt-1 mr-3 h-5 w-5 text-blue-600 rounded focus:ring-blue-500">
+                                            <div>
+                                                <p class="font-medium text-slate-800">1. Tạo trang Profile (Jinja2)</p>
+                                                <p class="text-sm text-slate-500">Hiển thị thông tin tên, tuổi, avatar từ biến Python.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start">
+                                            <input type="checkbox" class="mt-1 mr-3 h-5 w-5 text-blue-600 rounded focus:ring-blue-500">
+                                            <div>
+                                                <p class="font-medium text-slate-800">2. API Đăng ký (Postman)</p>
+                                                <p class="text-sm text-slate-500">Tạo API POST nhận JSON (username, password) và trả về thông báo thành công.</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start">
+                                            <input type="checkbox" class="mt-1 mr-3 h-5 w-5 text-blue-600 rounded focus:ring-blue-500">
+                                            <div>
+                                                <p class="font-medium text-slate-800">3. Viết Docs</p>
+                                                <p class="text-sm text-slate-500">Viết file README.md mô tả API Đăng ký vừa tạo.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-800 p-6 rounded-xl shadow-sm text-white">
+                                    <h3 class="text-xl font-bold mb-4">⚡ Quick Quiz</h3>
+                                    <div id="quiz-area" class="space-y-6">
+                                        <!-- Quiz content injected here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                }
+            ]
+        };
+
+        const quizQuestions = [
+            {
+                q: "1. Thư mục nào chứa các file CSS/JS?",
+                options: ["templates", "static", "assets", "public"],
+                correct: 1
+            },
+            {
+                q: "2. Method nào dùng để xóa dữ liệu?",
+                options: ["REMOVE", "CLEAR", "DELETE", "POST"],
+                correct: 2
+            },
+            {
+                q: "3. Jinja2 dùng ký tự nào để in biến?",
+                options: ["{{ }}", "{% %}", "[[ ]]", "< >"],
+                correct: 0
+            }
+        ];
+
+        // --- Init Functions ---
+
+        function initApp() {
+            renderSidebar();
+            renderMobileNav();
+            loadModule(courseData.modules[0].id); // Load overview by default
             
-            <!-- Code Example Section -->
-            <div class="bg-white p-6 rounded-lg shadow-sm">
-                 <h3 class="text-xl font-bold text-gray-800 mb-3">3. Ví dụ Code (Python + Flask)</h3>
-                 <div class="code-block">
-<span class="keyword">from</span> flask <span class="keyword">import</span> Flask, render_template
+            // Mobile menu toggle
+            document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.toggle('hidden');
+                sidebar.classList.toggle('absolute');
+                sidebar.classList.toggle('z-50');
+            });
+        }
 
-app = Flask(__name__)
+        function renderSidebar() {
+            const container = document.getElementById('nav-container');
+            container.innerHTML = courseData.modules.map(mod => `
+                <button onclick="loadModule('${mod.id}')" 
+                        class="nav-btn w-full text-left px-6 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center" 
+                        id="btn-${mod.id}">
+                    <span class="mr-3 text-lg">${mod.icon}</span>
+                    ${mod.title}
+                </button>
+            `).join('');
+        }
 
-<span class="function">@app.route</span>(<span class="string">'/'</span>)
-<span class="keyword">def</span> <span class="function">home</span>():
-    user_info = {<span class="string">"name"</span>: <span class="string">"Sinh Viên FPT"</span>, <span class="string">"score"</span>: 9.5}
-    <span class="keyword">return</span> render_template(<span class="string">'index.html'</span>, data=user_info)
-                 </div>
-            </div>
-        </div>
+        function renderMobileNav() {
+             // Re-uses sidebar logic for simplicity in this SPA, 
+             // but strictly styling adjustments handled via CSS classes toggled in initApp
+        }
 
-        <!-- Module 2: Static Files -->
-        <div id="view-module2" class="content-view hidden space-y-8">
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
-                <h2 class="text-3xl font-bold text-gray-900">Module 2: Static Files (CSS/JS)</h2>
-                <p class="mt-2 text-gray-600">Làm đẹp trang web và thêm tính tương tác client-side.</p>
-            </div>
+        function loadModule(moduleId) {
+            // Update UI State
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const activeBtn = document.getElementById(`btn-${moduleId}`);
+            if(activeBtn) activeBtn.classList.add('active');
 
-            <div class="grid md:grid-cols-2 gap-8">
-                <div class="space-y-4">
-                    <h3 class="text-xl font-bold text-gray-800">Lý thuyết cốt lõi</h3>
-                    <p class="text-gray-600">Static files là các tệp tin không thay đổi nội dung khi server xử lý request (ví dụ: ảnh logo, file style.css, script.js). Framework cần một "cổng" riêng để phục vụ các file này hiệu quả.</p>
-                    
-                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                        <p class="font-bold text-yellow-800">⚠️ Lỗi thường gặp:</p>
-                        <p class="text-yellow-700 text-sm">Dùng đường dẫn tuyệt đối từ máy cá nhân (C:/Users/...) thay vì đường dẫn tương đối hoặc hàm <code>url_for</code>.</p>
-                    </div>
+            // Inject Content
+            const module = courseData.modules.find(m => m.id === moduleId);
+            document.getElementById('main-content').innerHTML = module.content;
 
-                    <h4 class="font-bold mt-4">Cú pháp Jinja2 để gọi Static File:</h4>
-                    <div class="code-block text-sm">
-&lt;link rel="stylesheet" href="<span class="variable">{{ url_for('static', filename='style.css') }}</span>"&gt;
-                    </div>
-                </div>
-                
-                <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col items-center">
-                    <h3 class="text-lg font-bold mb-4">Minh họa luồng dữ liệu</h3>
-                    <!-- Simple diagram simulation using HTML/CSS -->
-                    <div class="flex flex-col items-center space-y-2 w-full max-w-sm">
-                        <div class="w-full bg-blue-100 p-3 rounded text-center border border-blue-300 relative">
-                            Browser (Client)
-                            <div class="absolute -bottom-4 left-1/2 transform -translate-x-1/2 text-xl">⬇️</div>
-                        </div>
-                        <div class="h-8"></div>
-                        <div class="w-full bg-gray-100 p-3 rounded text-center border border-gray-300">
-                            Server (Flask/Django)
-                        </div>
-                        <div class="flex w-full justify-between mt-2">
-                            <div class="w-5/12 text-center text-xs p-2 bg-green-50 border border-green-200 rounded">
-                                Route '/' <br> -> index.html (Template)
+            // Initialize specific dynamic elements based on module
+            if (moduleId === 'overview') initOverviewCharts();
+            if (moduleId === 'jinja2') initJinjaSim();
+            if (moduleId === 'practice') initQuiz();
+
+            // Mobile: close menu if open
+            if(window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('hidden');
+            }
+        }
+
+        // --- Feature: Jinja2 Simulator ---
+        function initJinjaSim() {
+            const input = document.getElementById('jinja-data');
+            if(!input) return;
+
+            const update = () => {
+                const output = document.getElementById('jinja-output');
+                try {
+                    const data = JSON.parse(input.value);
+                    // Mock rendering logic
+                    let html = `
+                        <div class="border p-4 rounded bg-slate-50 shadow-sm max-w-sm">
+                            <h3 class="text-xl font-bold text-slate-800">Xin chào, <span class="text-blue-600">${data.user || ''}</span></h3>
+                            <p class="text-slate-600">Điểm số: <b>${data.score || 0}</b></p>
+                            <div class="mt-2 pt-2 border-t border-slate-200">
+                                ${data.is_admin 
+                                    ? '<button class="bg-red-500 text-white px-3 py-1 rounded text-xs">Xóa User</button>' 
+                                    : '<span class="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs">User thường</span>'}
                             </div>
-                            <div class="w-5/12 text-center text-xs p-2 bg-purple-50 border border-purple-200 rounded">
-                                Route '/static/...' <br> -> style.css (File)
-                            </div>
                         </div>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-4 text-center">Trình duyệt gửi request riêng biệt cho HTML và các file Static.</p>
-                </div>
-            </div>
-        </div>
+                    `;
+                    output.innerHTML = html;
+                } catch (e) {
+                    output.innerHTML = `<span class="text-red-500 text-sm">Lỗi JSON: ${e.message}</span>`;
+                }
+            };
+            
+            input.addEventListener('input', update);
+            update(); // Initial run
+        }
 
-        <!-- Module 3: Postman Basics -->
-        <div id="view-module3" class="content-view hidden space-y-8">
-             <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-orange-500">
-                <h2 class="text-3xl font-bold text-gray-900">Module 3: Postman & API Testing</h2>
-                <p class="mt-2 text-gray-600">Công cụ không thể thiếu của mọi Backend Developer.</p>
-            </div>
+        // --- Feature: Postman Simulator ---
+        function runPostmanSim() {
+            const method = document.getElementById('pm-method').value;
+            const url = document.getElementById('pm-url').value;
+            const bodyRaw = document.getElementById('pm-body').value;
+            const responseBox = document.getElementById('pm-response');
+            const statusBox = document.getElementById('pm-status');
 
-            <!-- Postman Emulator -->
-            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="bg-gray-100 p-4 border-b border-gray-200 flex justify-between items-center">
-                    <h3 class="font-bold text-gray-700">🚀 Trình giả lập API Client</h3>
-                    <span class="text-xs bg-gray-200 px-2 py-1 rounded text-gray-600">Mode: Interactive Learning</span>
-                </div>
+            responseBox.innerHTML = '<span class="text-yellow-400 animate-pulse">Sending request...</span>';
+            
+            setTimeout(() => {
+                let status = 200;
+                let data = {};
+                let statusText = "OK";
+                let statusColor = "bg-green-200 text-green-800";
+
+                try {
+                    // Logic Simulation
+                    if(method === "POST" || method === "PUT") {
+                        const parsedBody = JSON.parse(bodyRaw || "{}");
+                        if(!parsedBody.name && !parsedBody.username) {
+                            status = 400;
+                            statusText = "Bad Request";
+                            statusColor = "bg-red-200 text-red-800";
+                            data = { error: "Missing required fields (name/username)" };
+                        } else {
+                            status = 201;
+                            statusText = "Created";
+                            data = { success: true, id: Math.floor(Math.random() * 1000), ...parsedBody };
+                        }
+                    } else if (method === "DELETE") {
+                        status = 204;
+                        statusText = "No Content";
+                        data = {}; // Empty body
+                    } else {
+                        // GET
+                        data = [
+                            { id: 1, name: "Alice", role: "Admin" },
+                            { id: 2, name: "Bob", role: "User" }
+                        ];
+                    }
+                } catch(e) {
+                    status = 400;
+                    statusText = "Invalid JSON";
+                    statusColor = "bg-red-200 text-red-800";
+                    data = { error: "JSON Body syntax error" };
+                }
+
+                // Update UI
+                statusBox.className = `text-xs font-mono px-2 py-0.5 rounded ${statusColor}`;
+                statusBox.innerText = `${status} ${statusText}`;
                 
-                <div class="p-6 space-y-4">
-                    <!-- Controls -->
-                    <div class="flex flex-col sm:flex-row gap-2">
-                        <select id="pm-method" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 w-full sm:w-32 font-bold">
-                            <option value="GET" class="text-green-600">GET</option>
-                            <option value="POST" class="text-yellow-600">POST</option>
-                            <option value="PUT" class="text-blue-600">PUT</option>
-                            <option value="DELETE" class="text-red-600">DELETE</option>
-                        </select>
-                        <input type="text" id="pm-url" value="https://api.example.com/users" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5 flex-grow font-mono">
-                        <button onclick="simulateRequest()" class="text-white bg-orange-600 hover:bg-orange-700 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5">Send</button>
+                const jsonStr = JSON.stringify(data, null, 2);
+                // Syntax highlighting for JSON (simple)
+                responseBox.innerHTML = `<pre>${jsonStr}</pre>`;
+
+            }, 600);
+        }
+
+        // --- Feature: Quiz ---
+        function initQuiz() {
+            const container = document.getElementById('quiz-area');
+            container.innerHTML = quizQuestions.map((q, idx) => `
+                <div class="quiz-item">
+                    <p class="font-bold text-sm mb-2">${q.q}</p>
+                    <div class="space-y-1">
+                        ${q.options.map((opt, optIdx) => `
+                            <button onclick="checkAnswer(this, ${idx}, ${optIdx})" 
+                                    class="w-full text-left text-sm px-3 py-2 rounded border border-slate-600 hover:bg-slate-700 transition-colors">
+                                ${opt}
+                            </button>
+                        `).join('')}
                     </div>
-
-                    <!-- Tabs -->
-                    <div class="border-b border-gray-200">
-                        <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500">
-                            <li class="mr-2">
-                                <a href="#" class="inline-block p-4 text-orange-600 border-b-2 border-orange-600 active" aria-current="page">Body (JSON)</a>
-                            </li>
-                            <li class="mr-2">
-                                <a href="#" class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300">Headers</a>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- Body Input -->
-                    <textarea id="pm-body" class="w-full h-24 bg-gray-50 border border-gray-300 rounded font-mono text-sm p-2" placeholder="{ 'key': 'value' }"></textarea>
-                    
-                    <!-- Response Area -->
-                    <div class="mt-4">
-                        <div class="flex justify-between items-end mb-2">
-                            <label class="font-bold text-gray-700">Response</label>
-                            <span id="pm-status" class="text-xs font-mono px-2 py-1 rounded bg-gray-200">Status: Waiting...</span>
-                        </div>
-                        <div id="pm-response" class="w-full h-40 bg-gray-900 text-green-400 font-mono text-sm p-4 rounded overflow-auto">
-                            // Click 'Send' to see response...
-                        </div>
-                    </div>
+                    <p id="feedback-${idx}" class="text-xs mt-1 hidden"></p>
                 </div>
-            </div>
+            `).join('');
+        }
 
-            <!-- Theory Cards -->
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="bg-white p-5 rounded-lg border border-gray-100 shadow-sm">
-                    <h4 class="font-bold text-lg mb-2 text-green-700">GET Request</h4>
-                    <p class="text-sm text-gray-600">Dùng để **lấy dữ liệu**. Không có Body (thường gửi tham số qua URL Params).</p>
-                    <p class="text-xs mt-2 text-gray-500">Ví dụ: Lấy danh sách sản phẩm, xem chi tiết bài viết.</p>
-                </div>
-                <div class="bg-white p-5 rounded-lg border border-gray-100 shadow-sm">
-                    <h4 class="font-bold text-lg mb-2 text-yellow-700">POST Request</h4>
-                    <p class="text-sm text-gray-600">Dùng để **tạo mới dữ liệu**. Dữ liệu được gửi kín đáo trong Body (JSON/Form).</p>
-                    <p class="text-xs mt-2 text-gray-500">Ví dụ: Đăng ký tài khoản, gửi comment.</p>
-                </div>
-                <div class="bg-white p-5 rounded-lg border border-gray-100 shadow-sm">
-                    <h4 class="font-bold text-lg mb-2 text-blue-700">PUT Request</h4>
-                    <p class="text-sm text-gray-600">Dùng để **cập nhật toàn bộ** đối tượng. Cần gửi ID và toàn bộ dữ liệu mới.</p>
-                </div>
-                <div class="bg-white p-5 rounded-lg border border-gray-100 shadow-sm">
-                    <h4 class="font-bold text-lg mb-2 text-red-700">DELETE Request</h4>
-                    <p class="text-sm text-gray-600">Dùng để **xóa dữ liệu**. Cần cẩn trọng khi cấp quyền cho API này.</p>
-                </div>
-            </div>
-        </div>
+        function checkAnswer(btn, qIdx, optIdx) {
+            const isCorrect = quizQuestions[qIdx].correct === optIdx;
+            const feedback = document.getElementById(`feedback-${qIdx}`);
+            
+            // Reset buttons in this group
+            btn.parentElement.querySelectorAll('button').forEach(b => {
+                b.classList.remove('bg-green-600', 'bg-red-600', 'border-transparent');
+                b.classList.add('border-slate-600');
+            });
 
-        <!-- Module 4: Documentation -->
-        <div id="view-module4" class="content-view hidden space-y-8">
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500">
-                <h2 class="text-3xl font-bold text-gray-900">Module 4: API Documentation</h2>
-                <p class="mt-2 text-gray-600">Viết tài liệu để Frontend và Backend "hiểu nhau".</p>
-            </div>
+            if(isCorrect) {
+                btn.classList.add('bg-green-600', 'border-transparent');
+                feedback.innerText = "Chính xác! 🎉";
+                feedback.className = "text-xs mt-1 text-green-400 block";
+            } else {
+                btn.classList.add('bg-red-600', 'border-transparent');
+                feedback.innerText = "Sai rồi, thử lại nhé.";
+                feedback.className = "text-xs mt-1 text-red-400 block";
+            }
+        }
 
-            <div class="bg-white p-8 rounded-lg shadow-sm">
-                <h3 class="text-xl font-bold mb-4">Mẫu tài liệu API chuẩn (Markdown)</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="code-block text-sm">
-## 1. Lấy thông tin User
-**Endpoint:** `/api/users/{id}`
-**Method:** `GET`
+        // --- Charts ---
+        function initOverviewCharts() {
+            const ctx = document.getElementById('overviewChart');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Template Engine (SSR)', 'Single Page App (React/Vue)', 'Static Generator'],
+                        datasets: [{
+                            data: [30, 50, 20],
+                            backgroundColor: ['#3b82f6', '#f59e0b', '#10b981'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            }
+        }
 
-**Params:**
-- `id` (int): ID của user cần lấy.
+        // Start
+        window.addEventListener('DOMContentLoaded', initApp);
 
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "name": "Nguyen Van A",
-  "email": "a@example.com"
-}
-```
-
-**Error Response (404 Not Found):**
-```json
-{ "error": "User not found" }
+    </script>
+</body>
+</html>
