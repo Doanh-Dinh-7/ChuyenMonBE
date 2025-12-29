@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học SQLAlchemy ORM trong 1 Tuần</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Syntax Highlighting Mock */
+        .token-keyword { color: #c678dd; }
+        .token-class { color: #e5c07b; }
+        .token-string { color: #98c379; }
+        .token-func { color: #61afef; }
+        .token-comment { color: #7f848e; font-style: italic; }
+
+        /* Chart Container Strict Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 300px;
+            max-height: 400px;
+            margin: 0 auto;
+        }
+        
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        .nav-item.active {
+            background-color: #eff6ff;
+            color: #2563eb;
+            border-right: 4px solid #2563eb;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <!-- Chosen Palette: Tailwind Blue & Slate -->
+    <!-- Application Structure: Dashboard layout with modules. Fixed SyntaxError issue. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <!-- Mobile Header -->
+    <header class="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center z-20">
+        <h1 class="text-xl font-bold text-blue-700">SQLAlchemy Mastery</h1>
+        <button id="mobile-menu-btn" class="text-gray-600 focus:outline-none">
+            <i class="fas fa-bars text-2xl"></i>
+        </button>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <nav id="sidebar" class="bg-white w-full md:w-64 border-r border-gray-200 flex-shrink-0 flex flex-col h-full transform -translate-x-full md:translate-x-0 transition-transform duration-300 absolute md:relative z-10">
+        <div class="p-6 border-b border-gray-200 hidden md:block">
+            <h1 class="text-2xl font-bold text-blue-700">SQLAlchemy <span class="text-sm font-normal text-gray-500 block">Mastery Course</span></h1>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto py-4">
+            <div class="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Lộ trình học tập</div>
+            <ul class="space-y-1">
+                <li>
+                    <button onclick="loadModule('intro')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group active">
+                        <i class="fas fa-book-open w-6 text-gray-400 group-hover:text-blue-500"></i>
+                        <span class="font-medium">Tổng quan & ORM</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="loadModule('models')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
+                        <i class="fas fa-cube w-6 text-gray-400 group-hover:text-blue-500"></i>
+                        <span class="font-medium">Định nghĩa Model</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="loadModule('sessions')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
+                        <i class="fas fa-database w-6 text-gray-400 group-hover:text-blue-500"></i>
+                        <span class="font-medium">Session & Transaction</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="loadModule('queries')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
+                        <i class="fas fa-search w-6 text-gray-400 group-hover:text-blue-500"></i>
+                        <span class="font-medium">Truy vấn (Query)</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="loadModule('alembic')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
+                        <i class="fas fa-code-branch w-6 text-gray-400 group-hover:text-blue-500"></i>
+                        <span class="font-medium">Migration (Alembic)</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="loadModule('practice')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
+                        <i class="fas fa-laptop-code w-6 text-gray-400 group-hover:text-blue-500"></i>
+                        <span class="font-medium">Thực hành & Bài tập</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="p-4 border-t border-gray-200 bg-gray-50">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-700">Sinh viên</p>
+                    <p class="text-xs text-gray-500">Tiến độ: <span id="progress-text">15%</span></p>
+                </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+                <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 15%"></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-8 relative" id="main-content">
+        <!-- Content will be injected here via JavaScript -->
+    </main>
+
+    <script>
+        // --- DATA STORE ---
+        // Ensure no syntax errors in object definition
+        const courseData = {
+            intro: {
+                title: "Ngày 1: Giới thiệu ORM & SQLAlchemy",
+                description: "Hiểu bản chất của Object Relational Mapping (ORM), tại sao chúng ta sử dụng nó thay vì SQL thuần.",
+                content: `
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 fade-in">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">ORM là gì?</h3>
+                            <p class="text-gray-600 mb-4 leading-relaxed">
+                                <strong>ORM (Object Relational Mapping)</strong> là kỹ thuật lập trình giúp ánh xạ cơ sở dữ liệu (Database) sang các đối tượng (Objects) trong code.
+                            </p>
+                            <p class="text-gray-600 mb-4 leading-relaxed">
+                                Thay vì viết câu lệnh SQL raw như <code class="bg-gray-100 px-1 rounded text-red-500">SELECT * FROM users</code>, bạn thao tác với class Python như <code class="bg-gray-100 px-1 rounded text-blue-500">session.query(User).all()</code>.
+                            </p>
+                            <div class="flex gap-2 mt-4">
+                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">An toàn</span>
+                                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">Đa nền tảng DB</span>
+                                <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-semibold">Dễ bảo trì</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Hiệu suất vs Tốc độ phát triển</h3>
+                            <p class="text-sm text-gray-500 mb-4">Biểu đồ so sánh mang tính tương đối giữa SQL thuần và ORM.</p>
+                            <div class="chart-container flex-1">
+                                <canvas id="ormChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8 fade-in">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Tại sao chọn SQLAlchemy?</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                <div class="text-blue-500 text-2xl mb-2"><i class="fas fa-layer-group"></i></div>
+                                <h4 class="font-bold text-gray-800 mb-1">Mạnh mẽ & Linh hoạt</h4>
+                                <p class="text-sm text-gray-600">Hỗ trợ cả mẫu ORM (cao cấp) và Core (thấp cấp, gần SQL).</p>
+                            </div>
+                            <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                                <div class="text-green-500 text-2xl mb-2"><i class="fas fa-shield-alt"></i></div>
+                                <h4 class="font-bold text-gray-800 mb-1">Bảo mật</h4>
+                                <p class="text-sm text-gray-600">Tự động escape các ký tự đặc biệt, ngăn chặn SQL Injection.</p>
+                            </div>
+                            <div class="p-4 bg-purple-50 rounded-lg border border-purple-100">
+                                <div class="text-purple-500 text-2xl mb-2"><i class="fas fa-users"></i></div>
+                                <h4 class="font-bold text-gray-800 mb-1">Cộng đồng lớn</h4>
+                                <p class="text-sm text-gray-600">Là tiêu chuẩn công nghiệp trong Python (dùng trong Flask, FastAPI).</p>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                chartId: 'ormChart',
+                chartType: 'bar',
+                chartData: {
+                    labels: ['Tốc độ Phát triển', 'Dễ bảo trì', 'Hiệu năng thô (Raw Speed)'],
+                    datasets: [
+                        {
+                            label: 'SQL Thuần',
+                            data: [40, 30, 95],
+                            backgroundColor: 'rgba(156, 163, 175, 0.6)',
+                            borderColor: 'rgba(156, 163, 175, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'SQLAlchemy ORM',
+                            data: [90, 85, 80],
+                            backgroundColor: 'rgba(37, 99, 235, 0.6)',
+                            borderColor: 'rgba(37, 99, 235, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                }
+            },
+            models: {
+                title: "Ngày 2: Định nghĩa Model",
+                description: "Học cách chuyển đổi tư duy từ 'Bảng' (Table) sang 'Lớp' (Class). Model là trái tim của ứng dụng ORM.",
+                content: `
+                    <div class="mb-8 fade-in">
+                         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Cấu trúc một Model</h3>
+                            <p class="text-gray-600 mb-6">Di chuột vào các dòng code bên trái để xem ý nghĩa tương ứng trong Database bên phải.</p>
+                            
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-0 border border-gray-200 rounded-lg overflow-hidden">
+                                <!-- Code Side -->
+                                <div class="bg-gray-900 p-6 code-font text-sm overflow-x-auto">
+                                    <div class="text-gray-400 mb-2"># models.py</div>
+                                    <pre class="text-gray-300">
+<span class="hover:bg-gray-700 cursor-pointer block p-1 transition-colors rounded" onmouseover="highlight('import')"><span class="token-keyword">from</span> sqlalchemy <span class="token-keyword">import</span> Column, Integer, String
+<span class="token-keyword">from</span> sqlalchemy.orm <span class="token-keyword">import</span> declarative_base</span>
+
+<span class="hover:bg-gray-700 cursor-pointer block p-1 transition-colors rounded" onmouseover="highlight('base')">Base = declarative_base()</span>
+
+<span class="hover:bg-gray-700 cursor-pointer block p-1 transition-colors rounded" onmouseover="highlight('class')"><span class="token-keyword">class</span> <span class="token-class">User</span>(Base):</span>
+    <span class="hover:bg-gray-700 cursor-pointer block p-1 transition-colors rounded" onmouseover="highlight('tablename')">__tablename__ = <span class="token-string">'users'</span></span>
+
+    <span class="hover:bg-gray-700 cursor-pointer block p-1 transition-colors rounded" onmouseover="highlight('id')">id = Column(Integer, primary_key=<span class="token-keyword">True</span>)</span>
+    <span class="hover:bg-gray-700 cursor-pointer block p-1 transition-colors rounded" onmouseover="highlight('name')">name = Column(String(50))</span>
+    <span class="hover:bg-gray-700 cursor-pointer block p-1 transition-colors rounded" onmouseover="highlight('email')">email = Column(String, unique=<span class="token-keyword">True</span>)</span>
+                                    </pre>
+                                </div>
+
+                                <!-- Visual Side -->
+                                <div class="bg-white p-6 flex flex-col justify-center items-center bg-gray-50">
+                                    <div class="text-gray-500 text-xs font-bold mb-2 uppercase tracking-wide">Database Representation</div>
+                                    <div id="visual-container" class="border border-gray-300 rounded shadow-md bg-white w-full max-w-xs transition-all duration-300">
+                                        <div id="v-tablename" class="bg-blue-100 p-3 border-b border-gray-200 font-bold text-center text-blue-800 transition-colors">users</div>
+                                        <div id="v-id" class="p-3 border-b border-gray-100 flex justify-between items-center transition-colors">
+                                            <span class="font-mono text-sm">id</span>
+                                            <span class="text-xs text-gray-400">INT (PK)</span>
+                                        </div>
+                                        <div id="v-name" class="p-3 border-b border-gray-100 flex justify-between items-center transition-colors">
+                                            <span class="font-mono text-sm">name</span>
+                                            <span class="text-xs text-gray-400">VARCHAR(50)</span>
+                                        </div>
+                                        <div id="v-email" class="p-3 flex justify-between items-center transition-colors">
+                                            <span class="font-mono text-sm">email</span>
+                                            <span class="text-xs text-gray-400">VARCHAR (U)</span>
+                                        </div>
+                                    </div>
+                                    <div id="explanation-box" class="mt-4 text-sm text-gray-600 bg-blue-50 p-3 rounded w-full min-h-[60px]">
+                                        Di chuột vào code để xem giải thích.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-yellow-800">Lưu ý quan trọng</h3>
+                                <div class="mt-2 text-sm text-yellow-700">
+                                    <p>Class \`User\` phải kế thừa từ \`Base\`. Nếu không, SQLAlchemy sẽ không thể theo dõi và map class này vào Database.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            sessions: {
+                title: "Ngày 3: Session & Transaction",
+                description: "Session là cầu nối giữa Python Objects và Database Connection. Hiểu về vòng đời của Session là chìa khóa để tránh lỗi.",
+                content: `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 fade-in">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Quy trình làm việc (The Flow)</h3>
+                            <ul class="relative border-l-2 border-blue-200 ml-3 space-y-6 pb-2">
+                                <li class="pl-6 relative">
+                                    <span class="absolute -left-[9px] top-0 bg-blue-500 w-4 h-4 rounded-full border-2 border-white"></span>
+                                    <h4 class="font-bold text-gray-800">1. Tạo Engine</h4>
+                                    <p class="text-sm text-gray-600 mt-1">Kết nối vật lý tới DB (Connection Pool).</p>
+                                    <code class="text-xs bg-gray-100 p-1 block mt-1 rounded">engine = create_engine(url)</code>
+                                </li>
+                                <li class="pl-6 relative">
+                                    <span class="absolute -left-[9px] top-0 bg-blue-500 w-4 h-4 rounded-full border-2 border-white"></span>
+                                    <h4 class="font-bold text-gray-800">2. Tạo Session</h4>
+                                    <p class="text-sm text-gray-600 mt-1">Khu vực làm việc tạm thời (Staging Area).</p>
+                                    <code class="text-xs bg-gray-100 p-1 block mt-1 rounded">session = Session(engine)</code>
+                                </li>
+                                <li class="pl-6 relative">
+                                    <span class="absolute -left-[9px] top-0 bg-blue-500 w-4 h-4 rounded-full border-2 border-white"></span>
+                                    <h4 class="font-bold text-gray-800">3. Thao tác (Add/Dirty)</h4>
+                                    <p class="text-sm text-gray-600 mt-1">Thêm, sửa object. Lúc này DB <strong>chưa</strong> thay đổi.</p>
+                                    <code class="text-xs bg-gray-100 p-1 block mt-1 rounded">session.add(new_user)</code>
+                                </li>
+                                <li class="pl-6 relative">
+                                    <span class="absolute -left-[9px] top-0 bg-green-500 w-4 h-4 rounded-full border-2 border-white"></span>
+                                    <h4 class="font-bold text-gray-800">4. Commit</h4>
+                                    <p class="text-sm text-gray-600 mt-1">Đẩy thay đổi vào DB vĩnh viễn.</p>
+                                    <code class="text-xs bg-gray-100 p-1 block mt-1 rounded">session.commit()</code>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Các lỗi thường gặp</h3>
+                            <div class="chart-container flex-1">
+                                <canvas id="errorChart"></canvas>
+                            </div>
+                            <div class="mt-4 text-sm text-gray-500 italic text-center">
+                                *Thống kê dựa trên thói quen của người mới học
+                            </div>
+                        </div>
+                    </div>
+                `,
+                chartId: 'errorChart',
+                chartType: 'doughnut',
+                chartData: {
+                    labels: ['Quên commit()', 'Không đóng session()', 'Truy cập obj sau khi đóng session', 'Lỗi Config URL'],
+                    datasets: [{
+                        data: [35, 25, 30, 10],
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(16, 185, 129, 0.7)'
+                        ],
+                        borderWidth: 0
+                    }]
+                }
+            },
+            queries: {
+                title: "Ngày 4: Truy vấn dữ liệu (Querying)",
+                description: "Sức mạnh của ORM nằm ở khả năng xây dựng các câu truy vấn phức tạp bằng ngôn ngữ lập trình thay vì nối chuỗi SQL.",
+                content: `
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8 fade-in">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">Trình mô phỏng Query Builder</h3>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Interactive Demo</span>
+                        </div>
+                        <p class="text-gray-600 mb-4 text-sm">Hãy chọn các thành phần để xây dựng câu query. Xem code Python và SQL tương ứng thay đổi thế nào.</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <!-- Controls -->
+                            <div class="space-y-2">
+                                <p class="font-bold text-sm text-gray-700">1. Chọn hành động:</p>
+                                <button onclick="updateQuery('all')" class="w-full text-left px-3 py-2 border rounded hover:bg-blue-50 text-sm focus:ring-2 focus:ring-blue-500">Lấy tất cả (All)</button>
+                                <button onclick="updateQuery('filter')" class="w-full text-left px-3 py-2 border rounded hover:bg-blue-50 text-sm focus:ring-2 focus:ring-blue-500">Lọc (Filter by Name)</button>
+                                <button onclick="updateQuery('limit')" class="w-full text-left px-3 py-2 border rounded hover:bg-blue-50 text-sm focus:ring-2 focus:ring-blue-500">Giới hạn & Sắp xếp (Limit/Order)</button>
+                            </div>
+
+                            <!-- Python Display -->
+                            <div class="md:col-span-2 space-y-4">
+                                <div>
+                                    <span class="text-xs font-bold text-blue-600 uppercase">Python SQLAlchemy</span>
+                                    <div class="bg-gray-900 rounded p-4 mt-1">
+                                        <code id="py-output" class="text-green-400 font-mono text-sm">session.query(User).all()</code>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-gray-500 uppercase">Generated SQL</span>
+                                    <div class="bg-gray-100 border border-gray-200 rounded p-4 mt-1">
+                                        <code id="sql-output" class="text-gray-600 font-mono text-sm">SELECT * FROM users;</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            alembic: {
+                title: "Ngày 5: Migration với Alembic",
+                description: "Quản lý thay đổi cấu trúc Database theo thời gian thực (Versioning).",
+                content: `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 fade-in">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Tại sao cần Alembic?</h3>
+                            <p class="text-gray-600 mb-4 text-sm leading-relaxed">Khi bạn sửa code Python (thêm cột vào class Model), Database thực tế <strong>không tự động cập nhật</strong>. Alembic sinh ra để đồng bộ hóa điều này.</p>
+                            
+                            <h4 class="font-bold text-gray-800 mt-6 mb-2">Quy trình 3 bước:</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-center p-3 bg-gray-50 rounded border border-gray-200">
+                                    <div class="bg-gray-800 text-white w-8 h-8 rounded flex items-center justify-center font-mono text-xs mr-3">1</div>
+                                    <div>
+                                        <div class="font-bold text-sm">Sửa Model</div>
+                                        <div class="text-xs text-gray-500">Thêm cột phone vào class User</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center p-3 bg-gray-50 rounded border border-gray-200">
+                                    <div class="bg-blue-600 text-white w-8 h-8 rounded flex items-center justify-center font-mono text-xs mr-3">2</div>
+                                    <div>
+                                        <div class="font-bold text-sm">Generate Migration</div>
+                                        <code class="text-xs text-red-500 bg-gray-100 px-1">alembic revision --autogenerate</code>
+                                    </div>
+                                </div>
+                                <div class="flex items-center p-3 bg-gray-50 rounded border border-gray-200">
+                                    <div class="bg-green-600 text-white w-8 h-8 rounded flex items-center justify-center font-mono text-xs mr-3">3</div>
+                                    <div>
+                                        <div class="font-bold text-sm">Upgrade Database</div>
+                                        <code class="text-xs text-red-500 bg-gray-100 px-1">alembic upgrade head</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Các lệnh phổ biến</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left text-gray-500">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-4 py-3">Lệnh (Command)</th>
+                                            <th scope="col" class="px-4 py-3">Tác dụng</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="bg-white border-b">
+                                            <td class="px-4 py-3 font-mono text-blue-600">alembic init alembic</td>
+                                            <td class="px-4 py-3">Khởi tạo môi trường migration</td>
+                                        </tr>
+                                        <tr class="bg-white border-b">
+                                            <td class="px-4 py-3 font-mono text-blue-600">alembic revision -m "msg"</td>
+                                            <td class="px-4 py-3">Tạo file migration rỗng (thủ công)</td>
+                                        </tr>
+                                        <tr class="bg-white border-b">
+                                            <td class="px-4 py-3 font-mono text-blue-600">--autogenerate</td>
+                                            <td class="px-4 py-3">Tự động so sánh Code vs DB để tạo script</td>
+                                        </tr>
+                                        <tr class="bg-white">
+                                            <td class="px-4 py-3 font-mono text-blue-600">alembic downgrade base</td>
+                                            <td class="px-4 py-3">Quay trở lại trạng thái ban đầu</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            practice: {
+                title: "Ngày 6-7: Thực hành chuyển đổi CRUD",
+                description: "Bài tập lớn: Chuyển đổi một ứng dụng quản lý sinh viên từ sử dụng SQL thuần sang SQLAlchemy ORM.",
+                content: `
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8 fade-in">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">So sánh trực quan: Raw SQL vs ORM</h3>
+                        <p class="text-gray-600 mb-6 text-sm">Chọn tab chức năng để xem cách triển khai khác nhau giữa hai phương pháp.</p>
+
+                        <div class="border-b border-gray-200 mb-4">
+                            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                <button onclick="showDiff('create')" class="diff-tab border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Create (INSERT)</button>
+                                <button onclick="showDiff('read')" class="diff-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Read (SELECT)</button>
+                                <button onclick="showDiff('update')" class="diff-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Update</button>
+                            </nav>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- SQL Side -->
+                            <div>
+                                <h4 class="font-bold text-gray-700 mb-2 flex items-center"><i class="fas fa-database mr-2"></i> Raw SQL (Thư viện sqlite3)</h4>
+                                <div class="bg-gray-100 p-4 rounded-lg h-64 overflow-y-auto">
+                                    <pre id="code-sql" class="code-font text-xs text-gray-700 whitespace-pre-wrap"></pre>
+                                </div>
+                            </div>
+                            
+                            <!-- ORM Side -->
+                            <div>
+                                <h4 class="font-bold text-blue-700 mb-2 flex items-center"><i class="fas fa-magic mr-2"></i> SQLAlchemy ORM</h4>
+                                <div class="bg-gray-900 p-4 rounded-lg h-64 overflow-y-auto">
+                                    <pre id="code-orm" class="code-font text-xs text-gray-300 whitespace-pre-wrap"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                     <div class="bg-blue-50 p-6 rounded-xl border border-blue-100 fade-in">
+                        <h3 class="text-lg font-bold text-blue-800 mb-2">Bài tập về nhà</h3>
+                        <p class="text-blue-900 mb-4 text-sm">Hãy hoàn thành các yêu cầu sau để kết thúc khóa học:</p>
+                        <ul class="list-disc ml-5 text-sm text-blue-800 space-y-2">
+                            <li>Định nghĩa model Student với các trường: id, name, age, grade.</li>
+                            <li>Tạo script seed.py để thêm 10 sinh viên mẫu vào database.</li>
+                            <li>Viết query tìm tất cả sinh viên có điểm (grade) > 8.0.</li>
+                            <li>Sử dụng Alembic để thêm cột email vào bảng Student mà không mất dữ liệu cũ.</li>
+                        </ul>
+                    </div>
+                `
+            }
+        };
+
+        const codeDiffs = {
+            create: {
+                sql: `cursor.execute(\n  "INSERT INTO users (name, email) VALUES (?, ?)",\n  ("Nam", "nam@example.com")\n)\nconn.commit()`,
+                orm: `new_user = User(name="Nam", email="nam@example.com")\nsession.add(new_user)\nsession.commit()`
+            },
+            read: {
+                sql: `cursor.execute("SELECT * FROM users WHERE name = ?", ("Nam",))\nuser = cursor.fetchone()`,
+                orm: `user = session.query(User).filter_by(name="Nam").first()`
+            },
+            update: {
+                sql: `cursor.execute(\n  "UPDATE users SET email = ? WHERE id = ?",\n  ("new@mail.com", 1)\n)\nconn.commit()`,
+                orm: `user = session.get(User, 1)\nuser.email = "new@mail.com"\nsession.commit()`
+            }
+        };
+
+        // --- APP LOGIC ---
+
+        let currentChart = null;
+
+        function loadModule(moduleId) {
+            const mainContent = document.getElementById('main-content');
+            const data = courseData[moduleId];
+            
+            // Update Active Nav State
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active', 'bg-blue-50', 'text-blue-600', 'border-right');
+                el.classList.add('text-gray-600');
+            });
+            // Re-apply active style logic inside click handlers or here if we had ID refs
+            
+            // Inject Content
+            mainContent.innerHTML = `
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-6 fade-in">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2">${data.title}</h2>
+                        <p class="text-gray-600 text-lg">${data.description}</p>
+                    </div>
+                    ${data.content}
+                </div>
+            `;
+
+            // Initialize Charts if present
+            if (data.chartId && data.chartData) {
+                renderChart(data.chartId, data.chartType, data.chartData);
+            }
+
+            // Initialize specific view logic
+            if (moduleId === 'practice') {
+                showDiff('create'); // default view
+            }
+
+            // Mobile menu close
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        }
+
+        function renderChart(id, type, data) {
+            const ctx = document.getElementById(id).getContext('2d');
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            currentChart = new Chart(ctx, {
+                type: type,
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // --- INTERACTIVE FUNCTIONS ---
+
+        // Day 2: Code Highlighter
+        function highlight(part) {
+            // Reset all
+            document.querySelectorAll('[id^="v-"]').forEach(el => el.classList.remove('bg-yellow-200', 'ring-2', 'ring-yellow-400'));
+            
+            const explanation = document.getElementById('explanation-box');
+            let targetId = '';
+            let text = '';
+
+            switch(part) {
+                case 'import': text = "Nhập khẩu các thành phần cần thiết. 'Base' là lớp cha cho mọi model."; break;
+                case 'base': text = "declarative_base() tạo ra một class cơ sở (Base). Mọi model của bạn phải kế thừa class này."; break;
+                case 'class': text = "Class Python đại diện cho một thực thể."; targetId = 'v-tablename'; break;
+                case 'tablename': text = "Thuộc tính bắt buộc __tablename__ định nghĩa tên bảng trong SQL."; targetId = 'v-tablename'; break;
+                case 'id': text = "Khóa chính (Primary Key), kiểu số nguyên, tự động tăng."; targetId = 'v-id'; break;
+                case 'name': text = "Cột tên, kiểu chuỗi ký tự, tối đa 50 ký tự."; targetId = 'v-name'; break;
+                case 'email': text = "Cột email, yêu cầu giá trị phải là duy nhất (Unique)."; targetId = 'v-email'; break;
+            }
+
+            explanation.innerText = text;
+            if (targetId) {
+                const el = document.getElementById(targetId);
+                el.classList.add('bg-yellow-200', 'ring-2', 'ring-yellow-400');
+            }
+        }
+
+        // Day 4: Query Builder
+        function updateQuery(type) {
+            const pyOut = document.getElementById('py-output');
+            const sqlOut = document.getElementById('sql-output');
+            
+            // Using explicit strings to avoid any parser ambiguity
+            switch(type) {
+                case 'all':
+                    pyOut.innerText = 'session.query(User).all()';
+                    sqlOut.innerText = 'SELECT * FROM users;';
+                    break;
+                case 'filter':
+                    pyOut.innerText = "session.query(User).filter_by(name='An').all()";
+                    sqlOut.innerText = "SELECT * FROM users WHERE users.name = 'An';";
+                    break;
+                case 'limit':
+                    pyOut.innerText = 'session.query(User).order_by(User.name).limit(5).all()';
+                    sqlOut.innerText = 'SELECT * FROM users ORDER BY users.name LIMIT 5;';
+                    break;
+            }
+            
+            // Animation effect
+            pyOut.parentElement.classList.add('ring-2', 'ring-green-400');
+            setTimeout(() => pyOut.parentElement.classList.remove('ring-2', 'ring-green-400'), 300);
+        }
+
+        // Day 6: Code Diff
+        function showDiff(action) {
+            document.getElementById('code-sql').innerText = codeDiffs[action].sql;
+            document.getElementById('code-orm').innerText = codeDiffs[action].orm;
+
+            // Update tab styles
+            const tabs = document.querySelectorAll('.diff-tab');
+            tabs.forEach(t => {
+                t.classList.remove('border-blue-500', 'text-blue-600');
+                t.classList.add('border-transparent', 'text-gray-500');
+            });
+            // Since this function is called by onclick, 'event' is available
+            if (event && event.target) {
+                 event.target.classList.remove('border-transparent', 'text-gray-500');
+                 event.target.classList.add('border-blue-500', 'text-blue-600');
+            }
+        }
+
+        // Init Mobile Menu
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            loadModule('intro'); // Default start
+            
+            // Add click handlers to sidebar buttons manually for styling update
+            const navButtons = document.querySelectorAll('.nav-item');
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    navButtons.forEach(b => {
+                        b.classList.remove('active', 'bg-blue-50', 'text-blue-600', 'border-r-4', 'border-blue-600');
+                        b.classList.add('text-gray-600');
+                        b.querySelector('i').classList.remove('text-blue-500');
+                        b.querySelector('i').classList.add('text-gray-400');
+                    });
+                    this.classList.add('active', 'bg-blue-50', 'text-blue-600', 'border-r-4', 'border-blue-600');
+                    this.classList.remove('text-gray-600');
+                    this.querySelector('i').classList.remove('text-gray-400');
+                    this.querySelector('i').classList.add('text-blue-500');
+                });
+            });
+            // Set first one active manually
+            if(navButtons.length > 0) {
+                // Manually apply active style to first button without triggering click (to avoid double loadModule)
+                const firstBtn = navButtons[0];
+                firstBtn.classList.add('active', 'bg-blue-50', 'text-blue-600', 'border-r-4', 'border-blue-600');
+                firstBtn.classList.remove('text-gray-600');
+                firstBtn.querySelector('i').classList.remove('text-gray-400');
+                firstBtn.querySelector('i').classList.add('text-blue-500');
+            }
+        });
+
+    </script>
+</body>
+</html>
