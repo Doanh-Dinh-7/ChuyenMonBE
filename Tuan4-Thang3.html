@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Học Authentication với JWT - Lộ trình 7 Ngày</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Chosen Palette: Academic Slate -->
+    <!-- 
+        Primary: Slate-800 (#1e293b)
+        Secondary: Indigo-600 (#4f46e5)
+        Accent: Amber-500 (#f59e0b)
+        Background: Slate-50 (#f8fafc)
+        Text: Slate-700 (#334155)
+    -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
+        .code-font { font-family: 'Fira Code', monospace; }
+        .nav-item.active { background-color: #e2e8f0; color: #1e293b; border-right: 4px solid #4f46e5; }
+        .interactive-step { transition: all 0.3s ease; cursor: pointer; }
+        .interactive-step:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .interactive-step.active { border-color: #4f46e5; background-color: #eef2ff; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Chart Container Styling as per requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 350px; }
+        }
+    </style>
+
+    <!-- Application Structure Plan: 
+        The app is designed as a "Learning Dashboard".
+        - Layout: Sidebar navigation (Modules/Days) + Main Content Area.
+        - Flow: Linear progression from Day 1 to Day 7, but allows random access.
+        - Content Strategy: Chunking information into bite-sized theory, followed immediately by visual interaction, then code examples, then a quiz.
+        - Interaction: 
+            1. "Concept Tabs" for switching between theory views (e.g., Session vs Token).
+            2. "Hashing Simulator" (Chart.js) to visualize security strength.
+            3. "JWT Anatomy Lab" to interactively explore token parts.
+            4. "Auth Flow Builder" allowing users to step through the login process.
+            5. "Mini Project Spec" as the final actionable output.
+    -->
+
+    <!-- Visualization & Content Choices:
+        1. Hashing Comparison:
+           - Goal: Compare speed/security of MD5 vs Bcrypt.
+           - Viz: Bar Chart (Chart.js).
+           - Interaction: None/Static load, demonstrates "Work Factor".
+           - Justification: Shows why slow hashing is good for passwords.
+        
+        2. JWT Anatomy:
+           - Goal: Explain Header, Payload, Signature.
+           - Viz: 3 distinct colored HTML blocks (Flexbox).
+           - Interaction: Hover/Click to reveal details about each part.
+           - Justification: Text-based explanation is abstract; visual breakdown clarifies the structure.
+
+        3. Auth Process Flow:
+           - Goal: Visualize Client -> Server -> DB roundtrips.
+           - Viz: Vertical Flow Diagram using styled HTML divs/borders.
+           - Interaction: "Next Step" button highlights current stage and updates explanatory text.
+           - Justification: Step-by-step control helps students follow the logic without getting overwhelmed.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="h-screen flex overflow-hidden text-sm md:text-base">
+
+    <!-- Mobile Header -->
+    <div class="md:hidden fixed top-0 w-full bg-white border-b border-slate-200 z-50 px-4 py-3 flex justify-between items-center">
+        <div class="font-bold text-slate-800">JWT Masterclass</div>
+        <button id="mobile-menu-btn" class="text-slate-500 focus:outline-none">
+            ☰
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="transform -translate-x-full md:translate-x-0 transition-transform duration-300 fixed md:relative z-40 w-64 h-full bg-white border-r border-slate-200 flex flex-col pt-16 md:pt-0">
+        <div class="p-6 border-b border-slate-100 hidden md:block">
+            <h1 class="text-xl font-bold text-slate-800 tracking-tight">JWT Masterclass</h1>
+            <p class="text-xs text-slate-500 mt-1">Lộ trình học 7 ngày</p>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-4" id="nav-container">
+            <!-- Nav Items generated by JS -->
+        </nav>
+
+        <div class="p-4 border-t border-slate-100 bg-slate-50">
+            <div class="text-xs font-semibold text-slate-500 mb-2">TIẾN ĐỘ CỦA BẠN</div>
+            <div class="w-full bg-slate-200 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+            <div id="progress-text" class="text-xs text-right mt-1 text-indigo-600 font-medium">0%</div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 h-full overflow-y-auto bg-slate-50 pt-16 md:pt-0 scroll-smooth" id="main-content">
+        <div class="max-w-4xl mx-auto p-6 md:p-12 min-h-full flex flex-col">
+            
+            <!-- Dynamic Content Header -->
+            <header id="content-header" class="mb-8">
+                <!-- Injected by JS -->
+            </header>
+
+            <!-- Dynamic Content Body -->
+            <div id="content-body" class="flex-1 space-y-8">
+                <!-- Injected by JS -->
+            </div>
+
+            <!-- Navigation Footer -->
+            <footer class="mt-12 pt-6 border-t border-slate-200 flex justify-between items-center">
+                <button id="prev-btn" class="hidden px-4 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-white transition-colors">
+                    ← Bài trước
+                </button>
+                <button id="next-btn" class="px-6 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 shadow-sm transition-colors transition-transform active:scale-95">
+                    Bài tiếp theo →
+                </button>
+            </footer>
+        </div>
+    </main>
+
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
+
+    <script>
+        // --- Data: The Curriculum Content ---
+        const curriculum = [
+            {
+                id: 'day1',
+                title: 'Ngày 1: Tổng quan & Khái niệm',
+                desc: 'Hiểu sự khác biệt giữa Authentication vs Authorization, Session vs Token.',
+                content: `
+                    <div class="prose max-w-none text-slate-600">
+                        <p class="text-lg leading-relaxed mb-6">
+                            Chào mừng bạn đến với khóa học. Trước khi đi vào code, chúng ta cần hiểu bản chất của vấn đề. 
+                            <strong>Authentication (Xác thực)</strong> trả lời câu hỏi "Bạn là ai?", trong khi 
+                            <strong>Authorization (Phân quyền)</strong> trả lời câu hỏi "Bạn được phép làm gì?".
+                        </p>
+
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4">So sánh: Session-based vs Token-based</h3>
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                    <h4 class="font-bold text-blue-800 mb-2">🏛️ Session-based (Truyền thống)</h4>
+                                    <ul class="list-disc pl-5 space-y-2 text-sm text-blue-900">
+                                        <li>Server tạo Session ID và lưu trong bộ nhớ (hoặc DB).</li>
+                                        <li>Gửi Session ID về Client (thường qua Cookie).</li>
+                                        <li>Mỗi request, Client gửi Cookie, Server tra cứu Session ID trong bộ nhớ.</li>
+                                        <li><strong>Nhược điểm:</strong> Khó mở rộng (scale) vì server phải nhớ trạng thái (Stateful).</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                                    <h4 class="font-bold text-indigo-800 mb-2">🎫 Token-based (Hiện đại - JWT)</h4>
+                                    <ul class="list-disc pl-5 space-y-2 text-sm text-indigo-900">
+                                        <li>Server xác thực user, tạo một chuỗi ký tự mã hóa (Token).</li>
+                                        <li>Gửi Token về Client. Server <strong>không lưu</strong> token này.</li>
+                                        <li>Mỗi request, Client gửi Token. Server chỉ cần giải mã (verify) chữ ký.</li>
+                                        <li><strong>Ưu điểm:</strong> Stateless, dễ dàng mở rộng (Scalability), dùng được cho Mobile App.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                            <p class="text-yellow-800 text-sm">
+                                <strong>Tóm lại:</strong> JWT giống như một tấm vé xem phim. Rạp phim (Server) không cần nhớ mặt bạn, họ chỉ cần nhìn tấm vé (Token) bạn cầm là biết bạn được vào phòng nào.
+                            </p>
+                        </div>
+                    </div>
+                `,
+                interactiveType: 'comparison_tabs' 
+            },
+            {
+                id: 'day2',
+                title: 'Ngày 2: Mật khẩu & Bảo mật',
+                desc: 'Tại sao không được lưu mật khẩu dạng plain text? Hashing và Bcrypt.',
+                content: `
+                    <div class="prose max-w-none text-slate-600">
+                        <p class="mb-4">
+                            Nguyên tắc vàng: <strong>Không bao giờ lưu mật khẩu người dùng dưới dạng văn bản thuần (plain text).</strong>
+                            Nếu database bị lộ, hacker sẽ có tất cả tài khoản. Chúng ta phải dùng <strong>Hashing</strong> (băm).
+                        </p>
+                        
+                        <h3 class="text-lg font-bold text-slate-800 mt-6 mb-3">Hash Function là gì?</h3>
+                        <p class="mb-4">
+                            Là hàm một chiều: Biến đầu vào bất kỳ thành chuỗi ký tự cố định. Không thể dịch ngược từ Hash về bản gốc.
+                            Tuy nhiên, các thuật toán cũ như MD5 hay SHA-1 rất nhanh, hacker có thể dùng "Rainbow Table" để dò ra mật khẩu.
+                        </p>
+
+                        <div class="mb-8">
+                            <h4 class="font-bold text-slate-800 mb-2">Biểu đồ: Thời gian để Hacker dò mật khẩu (Brute-force)</h4>
+                            <p class="text-sm text-slate-500 mb-4">So sánh giữa MD5 (Quá nhanh = Nguy hiểm) và Bcrypt (Chậm có chủ đích = An toàn).</p>
+                            <div class="chart-container bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                                <canvas id="hashChart"></canvas>
+                            </div>
+                        </div>
+
+                        <h3 class="text-lg font-bold text-slate-800 mb-3">Giải pháp: Bcrypt + Salt</h3>
+                        <ul class="list-disc pl-5 space-y-2 mb-6">
+                            <li><strong>Salt:</strong> Một chuỗi ngẫu nhiên được thêm vào mật khẩu trước khi băm. Giúp 2 người có cùng mật khẩu vẫn có hash khác nhau.</li>
+                            <li><strong>Work Factor (Cost):</strong> Bcrypt cố tình làm chậm quá trình băm để chống lại việc dò đoán tốc độ cao của máy tính hacker.</li>
+                        </ul>
+                    </div>
+                `,
+                interactiveType: 'hash_chart'
+            },
+            {
+                id: 'day3',
+                title: 'Ngày 3: Giải phẫu JWT',
+                desc: 'Cấu trúc của một JSON Web Token: Header, Payload và Signature.',
+                content: `
+                    <div class="prose max-w-none text-slate-600">
+                        <p class="mb-6">
+                            Một chuỗi JWT gồm 3 phần, ngăn cách bởi dấu chấm (<code>.</code>): 
+                            <span class="text-red-500 font-mono">Header</span>.<span class="text-purple-500 font-mono">Payload</span>.<span class="text-blue-500 font-mono">Signature</span>
+                        </p>
+
+                        <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                            <!-- Visualizer -->
+                            <div class="bg-slate-800 p-6 rounded-xl shadow-lg text-white font-mono text-sm break-all">
+                                <div class="mb-2 text-xs text-slate-400 uppercase tracking-wider">JWT Token (Ví dụ)</div>
+                                <span class="text-red-400 hover:bg-slate-700 cursor-help transition-colors p-1 rounded" onclick="showJwtDetail('header')">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</span><span class="text-slate-500">.</span><br>
+                                <span class="text-purple-400 hover:bg-slate-700 cursor-help transition-colors p-1 rounded" onclick="showJwtDetail('payload')">eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlNvbiIsImlhdCI6MTUxNjIzOTAyMn0</span><span class="text-slate-500">.</span><br>
+                                <span class="text-blue-400 hover:bg-slate-700 cursor-help transition-colors p-1 rounded" onclick="showJwtDetail('signature')">SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</span>
+                            </div>
+
+                            <!-- Explanation Panel -->
+                            <div id="jwt-explainer" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                <div class="h-full flex flex-col justify-center items-center text-center p-4">
+                                    <div class="text-4xl mb-4">👆</div>
+                                    <h4 class="font-bold text-slate-800">Tương tác để khám phá</h4>
+                                    <p class="text-sm text-slate-500 mt-2">Nhấp vào từng phần màu của Token bên trái để xem ý nghĩa chi tiết.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-indigo-50 p-4 rounded-lg text-sm text-indigo-800 border border-indigo-100">
+                            <strong>Lưu ý quan trọng:</strong> Payload (phần màu tím) chỉ được mã hóa Base64, KHÔNG được mã hóa bảo mật. Bất kỳ ai cũng có thể đọc được nội dung này. <br>
+                            👉 <strong>Tuyệt đối không lưu password hay thông tin nhạy cảm trong Payload.</strong>
+                        </div>
+                    </div>
+                `,
+                interactiveType: 'jwt_anatomy'
+            },
+            {
+                id: 'day4',
+                title: 'Ngày 4: Luồng xác thực (Flow)',
+                desc: 'Quy trình từ lúc người dùng nhập thông tin đăng ký đến khi đăng nhập thành công.',
+                content: `
+                    <div class="prose max-w-none text-slate-600">
+                        <p class="mb-6">
+                            Hiểu luồng dữ liệu là chìa khóa để code đúng. Dưới đây là mô phỏng tương tác giữa Client (Trình duyệt), Server (API) và Database.
+                        </p>
+
+                        <!-- Interactive Flow Diagram -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+                            <h3 class="font-bold text-center mb-6 text-slate-800">Mô phỏng quy trình Đăng nhập & Lấy Token</h3>
+                            
+                            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 text-sm">
+                                <div id="flow-step-1" class="flow-step w-full md:w-1/4 p-3 bg-slate-100 rounded border border-slate-300 text-center opacity-50 transition-all">
+                                    <strong>1. Client</strong><br>Gửi user/pass
+                                </div>
+                                <div class="hidden md:block text-slate-400">→</div>
+                                <div id="flow-step-2" class="flow-step w-full md:w-1/4 p-3 bg-slate-100 rounded border border-slate-300 text-center opacity-50 transition-all">
+                                    <strong>2. Server</strong><br>Tìm user & so sánh Hash
+                                </div>
+                                <div class="hidden md:block text-slate-400">→</div>
+                                <div id="flow-step-3" class="flow-step w-full md:w-1/4 p-3 bg-slate-100 rounded border border-slate-300 text-center opacity-50 transition-all">
+                                    <strong>3. Server</strong><br>Tạo (Sign) JWT
+                                </div>
+                                <div class="hidden md:block text-slate-400">→</div>
+                                <div id="flow-step-4" class="flow-step w-full md:w-1/4 p-3 bg-slate-100 rounded border border-slate-300 text-center opacity-50 transition-all">
+                                    <strong>4. Client</strong><br>Nhận & Lưu Token
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-50 p-4 rounded-lg min-h-[100px] flex items-center justify-center border border-slate-200">
+                                <p id="flow-description" class="text-center text-slate-700 font-medium">Nhấn "Bước tiếp theo" để bắt đầu mô phỏng.</p>
+                            </div>
+
+                            <div class="mt-4 flex justify-center">
+                                <button onclick="nextFlowStep()" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">Bước tiếp theo ▶</button>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                interactiveType: 'auth_flow'
+            },
+            {
+                id: 'day5',
+                title: 'Ngày 5: Bảo vệ API (Middleware)',
+                desc: 'Cách dùng Token để truy cập các tài nguyên được bảo vệ (Authorization).',
+                content: `
+                    <div class="prose max-w-none text-slate-600">
+                        <p class="mb-4">
+                            Sau khi có Token, Client sẽ đính kèm nó vào mỗi request gửi lên Server để chứng minh danh tính.
+                            Vị trí chuẩn: Header <code>Authorization: Bearer &lt;token&gt;</code>.
+                        </p>
+
+                        <div class="grid lg:grid-cols-2 gap-6 mb-8">
+                            <div class="bg-white p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-bold text-slate-800 mb-2 border-b pb-2">❌ Request không có Token</h4>
+                                <pre class="code-font text-xs bg-slate-900 text-red-300 p-3 rounded">
+GET /api/me
+Host: example.com
+
+--- RESPONSE ---
+401 Unauthorized
+{ "message": "Access Denied" }
+</pre>
+                            </div>
+                            <div class="bg-white p-5 rounded-lg border border-slate-200">
+                                <h4 class="font-bold text-slate-800 mb-2 border-b pb-2">✅ Request có Token hợp lệ</h4>
+                                <pre class="code-font text-xs bg-slate-900 text-green-300 p-3 rounded">
+GET /api/me
+Host: example.com
+Authorization: Bearer eyJhbGci...
+
+--- RESPONSE ---
+200 OK
+{ "id": 1, "username": "admin" }
+</pre>
+                            </div>
+                        </div>
+
+                        <h3 class="text-lg font-bold text-slate-800 mb-3">Middleware Logic</h3>
+                        <p class="mb-4">Middleware giống như người bảo vệ đứng trước cửa phòng VIP.</p>
+                        <ol class="list-decimal pl-5 space-y-2 mb-6">
+                            <li>Lấy token từ Header.</li>
+                            <li>Nếu không có token ➔ Trả lỗi 401.</li>
+                            <li>Nếu có, dùng <strong>Secret Key</strong> để verify (xác minh) token.</li>
+                            <li>Nếu verify lỗi (hết hạn, sai chữ ký) ➔ Trả lỗi 403.</li>
+                            <li>Nếu verify OK ➔ Giải mã payload, gắn thông tin user vào request ➔ Cho qua (next).</li>
+                        </ol>
+                    </div>
+                `,
+                interactiveType: 'none'
+            },
+            {
+                id: 'day6',
+                title: 'Ngày 6: Lưu trữ & Bảo mật nâng cao',
+                desc: 'Lưu token ở đâu? LocalStorage hay Cookie? Các lỗi thường gặp.',
+                content: `
+                    <div class="prose max-w-none text-slate-600">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4">Cuộc chiến: LocalStorage vs HttpOnly Cookie</h3>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left border-collapse">
+                                <thead class="bg-slate-100 text-slate-700 uppercase">
+                                    <tr>
+                                        <th class="p-3 border">Nơi lưu</th>
+                                        <th class="p-3 border">Ưu điểm</th>
+                                        <th class="p-3 border">Rủi ro (XSS / CSRF)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="p-3 border font-medium">LocalStorage</td>
+                                        <td class="p-3 border">Dễ code, dễ gửi header.</td>
+                                        <td class="p-3 border text-red-600">Dễ bị XSS tấn công (JS độc hại đọc được token).</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 border font-medium">HttpOnly Cookie</td>
+                                        <td class="p-3 border">JS không đọc được ➔ Chống XSS tốt.</td>
+                                        <td class="p-3 border text-orange-600">Dễ bị CSRF (cần thêm CSRF Token để fix).</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-6 bg-green-50 p-4 rounded-lg border border-green-100">
+                            <h4 class="font-bold text-green-800 mb-1">Lời khuyên cho Beginner:</h4>
+                            <p class="text-sm text-green-900">
+                                Bắt đầu với <strong>LocalStorage</strong> để hiểu cơ chế hoạt động. Khi làm dự án thực tế production, hãy nghiên cứu chuyển sang <strong>HttpOnly Cookie</strong> để bảo mật tốt hơn.
+                            </p>
+                        </div>
+                    </div>
+                `,
+                interactiveType: 'none'
+            },
+            {
+                id: 'day7',
+                title: 'Ngày 7: Mini Project (Bài tập lớn)',
+                desc: 'Tổng hợp kiến thức để xây dựng một Auth Service hoàn chỉnh.',
+                content: `
+                    <div class="prose max-w-none text-slate-600">
+                        <p class="mb-6">
+                            Đã đến lúc thực hành! Bạn hãy tự xây dựng một RESTful API sử dụng Node.js (Express), Python (Flask/FastAPI) hoặc Java (Spring Boot) với các yêu cầu sau:
+                        </p>
+
+                        <div class="space-y-6">
+                            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                                <div class="bg-slate-100 px-4 py-2 font-mono text-sm font-bold text-slate-700 border-b border-slate-200">1. POST /api/auth/register</div>
+                                <div class="p-4 text-sm">
+                                    <ul class="list-disc pl-5 space-y-1">
+                                        <li><strong>Input:</strong> <code>{ "username": "...", "password": "..." }</code></li>
+                                        <li><strong>Logic:</strong> Kiểm tra user tồn tại? Hash password bằng bcrypt. Lưu vào DB.</li>
+                                        <li><strong>Output:</strong> 201 Created.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                                <div class="bg-slate-100 px-4 py-2 font-mono text-sm font-bold text-slate-700 border-b border-slate-200">2. POST /api/auth/login</div>
+                                <div class="p-4 text-sm">
+                                    <ul class="list-disc pl-5 space-y-1">
+                                        <li><strong>Input:</strong> <code>{ "username": "...", "password": "..." }</code></li>
+                                        <li><strong>Logic:</strong> Tìm user. So sánh password (bcrypt.compare). Nếu đúng, tạo JWT (có hạn 1h).</li>
+                                        <li><strong>Output:</strong> <code>{ "token": "eyJ..." }</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                                <div class="bg-slate-100 px-4 py-2 font-mono text-sm font-bold text-slate-700 border-b border-slate-200">3. GET /api/auth/me <span class="bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded ml-2">Protected</span></div>
+                                <div class="p-4 text-sm">
+                                    <ul class="list-disc pl-5 space-y-1">
+                                        <li><strong>Input:</strong> Header <code>Authorization: Bearer ...</code></li>
+                                        <li><strong>Logic:</strong> Verify token. Lấy userId từ payload. Query DB lấy thông tin profile (trừ password).</li>
+                                        <li><strong>Output:</strong> <code>{ "id": 1, "username": "..." }</code></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 text-center">
+                            <p class="font-bold text-slate-800 mb-2">Chúc mừng bạn đã hoàn thành khóa học lý thuyết!</p>
+                            <p class="text-sm text-slate-500">Hãy bắt tay vào code ngay để biến kiến thức thành kỹ năng.</p>
+                        </div>
+                    </div>
+                `,
+                interactiveType: 'none'
+            }
+        ];
+
+        // --- State Management ---
+        let currentDayIndex = 0;
+        let flowStep = 0;
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderNav();
+            loadContent(0);
+            updateProgress();
+
+            // Event Listeners
+            document.getElementById('next-btn').addEventListener('click', () => changeDay(1));
+            document.getElementById('prev-btn').addEventListener('click', () => changeDay(-1));
+            document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileMenu);
+            document.getElementById('sidebar-overlay').addEventListener('click', toggleMobileMenu);
+        });
+
+        // --- Core Functions ---
+
+        function renderNav() {
+            const navContainer = document.getElementById('nav-container');
+            navContainer.innerHTML = '';
+            
+            curriculum.forEach((day, index) => {
+                const btn = document.createElement('button');
+                btn.className = `nav-item w-full text-left px-6 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none flex items-center justify-between group`;
+                btn.innerHTML = `
+                    <span>${day.title.split(':')[0]}</span>
+                    <span class="opacity-0 group-hover:opacity-100 transition-opacity text-xs bg-slate-200 px-2 py-0.5 rounded text-slate-600">Xem</span>
+                `;
+                btn.onclick = () => {
+                    loadContent(index);
+                    if(window.innerWidth < 768) toggleMobileMenu();
+                };
+                navContainer.appendChild(btn);
+            });
+        }
+
+        function loadContent(index) {
+            currentDayIndex = index;
+            const data = curriculum[index];
+
+            // Update UI Header
+            const header = document.getElementById('content-header');
+            header.innerHTML = `
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold uppercase rounded tracking-wide">Module ${index + 1}</span>
+                    <span class="text-slate-400 text-xs">Thời gian học: ~1h</span>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2">${data.title}</h2>
+                <p class="text-slate-500 text-lg">${data.desc}</p>
+            `;
+
+            // Update Body
+            document.getElementById('content-body').innerHTML = data.content;
+
+            // Update Nav Active State
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach((item, i) => {
+                if (i === index) item.classList.add('active');
+                else item.classList.remove('active');
+            });
+
+            // Update Footer Buttons
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            if (index === 0) prevBtn.classList.add('hidden');
+            else prevBtn.classList.remove('hidden');
+
+            if (index === curriculum.length - 1) {
+                nextBtn.textContent = 'Hoàn thành';
+                nextBtn.classList.replace('bg-indigo-600', 'bg-green-600');
+                nextBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-green-700');
+            } else {
+                nextBtn.textContent = 'Bài tiếp theo →';
+                nextBtn.classList.replace('bg-green-600', 'bg-indigo-600');
+                nextBtn.classList.replace('hover:bg-green-700', 'hover:bg-indigo-700');
+            }
+
+            // Initialize Interactive Elements
+            updateProgress();
+            
+            // Scroll to top
+            document.getElementById('main-content').scrollTop = 0;
+
+            // Trigger Specific Visualizations
+            setTimeout(() => {
+                if (data.interactiveType === 'hash_chart') initHashChart();
+                if (data.interactiveType === 'auth_flow') resetFlow();
+            }, 100);
+        }
+
+        function changeDay(offset) {
+            const newIndex = currentDayIndex + offset;
+            if (newIndex >= 0 && newIndex < curriculum.length) {
+                loadContent(newIndex);
+            }
+        }
+
+        function updateProgress() {
+            const percent = Math.round(((currentDayIndex + 1) / curriculum.length) * 100);
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+            document.getElementById('progress-text').textContent = `${percent}%`;
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const isClosed = sidebar.classList.contains('-translate-x-full');
+
+            if (isClosed) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // --- Interactive Component Logic ---
+
+        // 1. Hash Chart Logic
+        function initHashChart() {
+            const ctx = document.getElementById('hashChart');
+            if (!ctx) return;
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Plain Text', 'MD5 (Cũ)', 'SHA-256', 'Bcrypt (Chuẩn)'],
+                    datasets: [{
+                        label: 'Thời gian để Hack (Mô phỏng)',
+                        data: [0.0001, 0.5, 5, 100], // Fake relative scale
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.2)', // Red
+                            'rgba(249, 115, 22, 0.2)', // Orange
+                            'rgba(234, 179, 8, 0.2)', // Yellow
+                            'rgba(34, 197, 94, 0.6)'  // Green
+                        ],
+                        borderColor: [
+                            'rgb(239, 68, 68)',
+                            'rgb(249, 115, 22)',
+                            'rgb(234, 179, 8)',
+                            'rgb(34, 197, 94)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Độ khó / Thời gian (Relative Unit)' },
+                            display: false // Hide numbers for cleaner conceptual look
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const labels = [
+                                        'Tức thì (Rất nguy hiểm)',
+                                        'Rất nhanh (Dễ bị dò)',
+                                        'Trung bình (An toàn vừa)',
+                                        'Rất chậm (An toàn cao)'
+                                    ];
+                                    return labels[context.dataIndex];
+                                }
+                            }
+                        },
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // 2. JWT Anatomy Logic
+        window.showJwtDetail = function(part) {
+            const explainer = document.getElementById('jwt-explainer');
+            let title = "", content = "", colorClass = "";
+
+            if (part === 'header') {
+                title = "Header (Màu Đỏ)";
+                content = "Chứa metadata về loại token và thuật toán mã hóa (ví dụ: HS256). Được mã hóa Base64URL.";
+                colorClass = "text-red-600";
+            } else if (part === 'payload') {
+                title = "Payload (Màu Tím)";
+                content = "Chứa dữ liệu (Claims) như UserID, tên, quyền hạn, thời gian hết hạn (exp). Phần này KHÔNG được mã hóa bí mật, chỉ encode Base64.";
+                colorClass = "text-purple-600";
+            } else if (part === 'signature') {
+                title = "Signature (Màu Xanh)";
+                content = "Là chữ ký số. Được tạo bằng công thức: <br><code>Hash(Header + Payload + SecretKey)</code>.<br> Dùng để Server kiểm tra xem token có bị ai đó sửa đổi không.";
+                colorClass = "text-blue-600";
+            }
+
+            explainer.innerHTML = `
+                <div class="animate-fade-in-up">
+                    <h4 class="text-xl font-bold ${colorClass} mb-3">${title}</h4>
+                    <p class="text-slate-600 leading-relaxed">${content}</p>
+                    <div class="mt-4 text-xs text-slate-400 bg-slate-50 p-2 rounded border border-slate-100">
+                        Click phần khác để xem tiếp.
+                    </div>
+                </div>
+            `;
+        };
+
+        // 3. Auth Flow Logic
+        window.resetFlow = function() {
+            flowStep = 0;
+            updateFlowUI();
+        }
+
+        window.nextFlowStep = function() {
+            flowStep++;
+            if (flowStep > 4) flowStep = 1; // Loop back
+            updateFlowUI();
+        }
+
+        function updateFlowUI() {
+            // Reset all steps
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById(`flow-step-${i}`);
+                if (el) {
+                    el.classList.remove('bg-indigo-100', 'border-indigo-500', 'text-indigo-900', 'opacity-100', 'scale-105', 'shadow-md');
+                    el.classList.add('opacity-50');
+                }
+            }
+
+            const activeEl = document.getElementById(`flow-step-${flowStep}`);
+            const descEl = document.getElementById('flow-description');
+
+            if (flowStep === 0) {
+                descEl.innerHTML = 'Nhấn "Bước tiếp theo" để bắt đầu mô phỏng.';
+                return;
+            }
+
+            // Highlight active step
+            if (activeEl) {
+                activeEl.classList.remove('opacity-50');
+                activeEl.classList.add('bg-indigo-100', 'border-indigo-500', 'text-indigo-900', 'opacity-100', 'scale-105', 'shadow-md');
+            }
+
+            // Update description
+            const descriptions = [
+                "",
+                "<strong>Bước 1:</strong> Người dùng nhập username/password. Client gửi yêu cầu POST tới API Login.",
+                "<strong>Bước 2:</strong> Server nhận yêu cầu. Server query Database để tìm user. Sau đó dùng <code>bcrypt.compare()</code> để so sánh password gửi lên với hash trong DB.",
+                "<strong>Bước 3:</strong> Mật khẩu đúng! Server tạo ra một chuỗi JWT bằng Secret Key bí mật. Token này chứa thông tin user (id, role).",
+                "<strong>Bước 4:</strong> Server trả JWT về cho Client. Client lưu Token này (thường vào LocalStorage hoặc Cookie) để dùng cho các request sau."
+            ];
+            descEl.innerHTML = descriptions[flowStep];
+        }
+
+    </script>
+</body>
+</html>
