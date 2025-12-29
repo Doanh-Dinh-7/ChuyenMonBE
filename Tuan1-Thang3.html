@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khóa Học SQL Cơ Bản & ERD - Interactive Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Vietnamese:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans Vietnamese', sans-serif;
+            background-color: #fdfbf7; /* Warm neutral background */
+            color: #1f2937;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Code Block Styling */
+        .code-block {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+        .sql-keyword { color: #f472b6; font-weight: bold; } /* Pink-400 */
+        .sql-string { color: #a3e635; } /* Lime-400 */
+        .sql-func { color: #60a5fa; } /* Blue-400 */
+
+        /* Chart Container Strict Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Interactive Table Styling */
+        .db-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .db-table th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .db-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            background-color: white;
+        }
+        .db-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Connector Line Animation */
+        .connector-line {
+            transition: all 0.3s ease;
+        }
+        .connector-active {
+            border-color: #3b82f6 !important;
+            background-color: #eff6ff !important;
+            transform: scale(1.02);
+        }
+
+        .nav-item.active {
+            background-color: #eff6ff;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col md:flex-row">
+
+    <!-- REQUIRED PLACEHOLDERS -->
+    <!-- Chosen Palette: Warm Neutral Background (#fdfbf7) with Academic Blue (#2563eb), Slate text (#1f2937), and Code Dark Theme (#1e293b). Accents: Success Green, Warning Amber. -->
+    
+    <!-- Application Structure Plan: 
+         Structure: A "Digital Syllabus" layout.
+         - Left Sidebar: Navigation reflecting a 1-week curriculum (Intro, ERD, SQL, Practice).
+         - Main Content Area: Dynamic container that swaps content based on selection.
+         - Why: Students need a structured path. Grouping by "Module" allows for bite-sized learning (Theory -> Example -> Interactive Demo).
+         - Key Interactions: 
+           1. "SQL Playground": A simulated DB environment where users click buttons to run CRUD operations and see a JS-array-backed table update in real-time.
+           2. "ERD Visualizer": Hover interaction to show relationships between Primary Keys and Foreign Keys.
+           3. "Quiz Mode": Simple validation logic for learning checks.
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Intro: Chart.js Bar Chart showing "Most Popular Databases 2024" (Source: Stack Overflow Survey). Goal: Motivate students by showing market relevance. 
+            - Method: Chart.js (Canvas).
+         2. ERD: HTML/CSS Tables with hover listeners. Goal: Explain PK/FK visually.
+            - Method: DOM manipulation (addClass/removeClass). No SVG.
+         3. SQL Simulator: JS Arrays rendered as HTML tables. Goal: Teach CRUD without a backend.
+            - Method: Vanilla JS logic simulating a DB engine.
+         4. Content: Text formatted with Tailwind typography. Code blocks styled for readability.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Mobile Header -->
+    <div class="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center sticky top-0 z-50">
+        <h1 class="font-bold text-lg text-slate-800">SQL Master Class</h1>
+        <button id="mobile-menu-btn" class="text-slate-600 focus:outline-none text-2xl">
+            &#9776; <!-- Unicode Hamburger -->
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="hidden md:flex flex-col w-full md:w-64 bg-white border-r border-slate-200 h-screen sticky top-0 overflow-y-auto z-40">
+        <div class="p-6 border-b border-slate-100">
+            <h1 class="font-bold text-xl text-blue-700 tracking-tight">SQL & ERD <span class="block text-slate-500 text-sm font-normal mt-1">Nền Tảng Cốt Lõi</span></h1>
+            <div class="mt-4 w-full bg-slate-100 rounded-full h-2">
+                <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <p class="text-xs text-slate-400 mt-2">Tiến độ: <span id="progress-text">0%</span></p>
+        </div>
+        
+        <nav class="flex-1 py-4 space-y-1">
+            <button onclick="loadModule('intro')" class="nav-item w-full text-left px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors flex items-center group active" data-module="intro">
+                <span class="w-6 text-center mr-2 text-slate-400 group-hover:text-blue-500">&#10024;</span> <!-- Sparkles -->
+                <span class="font-medium">1. Tổng Quan DB</span>
+            </button>
+            <button onclick="loadModule('erd')" class="nav-item w-full text-left px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors flex items-center group" data-module="erd">
+                <span class="w-6 text-center mr-2 text-slate-400 group-hover:text-blue-500">&#9935;</span> <!-- Pick -->
+                <span class="font-medium">2. Thiết Kế ERD</span>
+            </button>
+            <button onclick="loadModule('sql')" class="nav-item w-full text-left px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors flex items-center group" data-module="sql">
+                <span class="w-6 text-center mr-2 text-slate-400 group-hover:text-blue-500">&#128187;</span> <!-- Computer -->
+                <span class="font-medium">3. SQL Cơ Bản</span>
+            </button>
+            <button onclick="loadModule('lab')" class="nav-item w-full text-left px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors flex items-center group" data-module="lab">
+                <span class="w-6 text-center mr-2 text-slate-400 group-hover:text-blue-500">&#128640;</span> <!-- Rocket -->
+                <span class="font-medium">4. Bài Tập Thực Tế</span>
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-slate-100 bg-slate-50">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                    GV
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-slate-700">Giảng Viên AI</p>
+                    <p class="text-xs text-slate-500">Senior Developer</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-y-auto h-screen bg-[#fdfbf7]" id="main-content">
+        <!-- Content injected dynamically -->
+    </main>
+
+    <script>
+        // --- State Management ---
+        const appState = {
+            currentModule: 'intro',
+            progress: 0,
+            simulatedDB: [
+                { id: 1, name: 'Nguyễn Văn A', email: 'vana@gmail.com', role: 'User' },
+                { id: 2, name: 'Trần Thị B', email: 'thib@gmail.com', role: 'Admin' },
+                { id: 3, name: 'Lê Văn C', email: 'vanc@gmail.com', role: 'User' }
+            ]
+        };
+
+        // --- Content Data Store ---
+        const modules = {
+            intro: {
+                title: "Chương 1: Tổng Quan Về Database",
+                description: "Hiểu bản chất dữ liệu và tại sao chúng ta cần Database (CSDL).",
+                content: `
+                    <div class="space-y-8 animate-fade-in">
+                        <!-- Introduction Section -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <h2 class="text-2xl font-bold text-slate-800 mb-4">Tại sao cần học SQL?</h2>
+                            <p class="text-slate-600 mb-6 leading-relaxed">
+                                Trong kỷ nguyên số, dữ liệu là tài sản quý giá nhất. Database (Cơ sở dữ liệu) là nơi lưu trữ tài sản đó, và SQL (Structured Query Language) là chìa khóa để bạn trích xuất, phân tích và thao tác với dữ liệu. Dù bạn là Backend Dev, Data Analyst hay Mobile Dev, SQL là kỹ năng bắt buộc.
+                            </p>
+                            
+                            <!-- Chart Container -->
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 text-center">Mức độ phổ biến của các Database (2024)</h3>
+                                <div class="chart-container">
+                                    <canvas id="dbChart"></canvas>
+                                </div>
+                                <p class="text-xs text-center text-slate-400 mt-2">Nguồn dữ liệu giả lập minh họa xu hướng thị trường</p>
+                            </div>
+                        </div>
+
+                        <!-- Core Concepts Grid -->
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">Database (CSDL) là gì?</h3>
+                                <p class="text-slate-600 text-sm">Là một tập hợp các dữ liệu có tổ chức, thường được lưu trữ và truy cập điện tử từ hệ thống máy tính. Hãy tưởng tượng nó như một tủ hồ sơ thông minh khổng lồ.</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">RDBMS là gì?</h3>
+                                <p class="text-slate-600 text-sm">Hệ quản trị CSDL quan hệ (Relational Database Management System). Dữ liệu được tổ chức thành các <strong>Bảng (Table)</strong> có liên kết với nhau. Ví dụ: PostgreSQL, MySQL, SQL Server.</p>
+                            </div>
+                        </div>
+
+                        <!-- Real World Analogy -->
+                        <div class="bg-amber-50 p-6 rounded-xl border border-amber-100">
+                            <h3 class="text-lg font-bold text-amber-800 mb-3">&#128161; Ví dụ thực tế: Excel vs Database</h3>
+                            <ul class="space-y-3 text-amber-900 text-sm">
+                                <li class="flex items-start"><span class="mr-2">&#9989;</span> <strong>Excel:</strong> Tốt cho dữ liệu nhỏ, cá nhân, tính toán nhanh. Khó quản lý khi có 1 triệu dòng hoặc nhiều người sửa cùng lúc.</li>
+                                <li class="flex items-start"><span class="mr-2">&#9989;</span> <strong>Database:</strong> Xử lý hàng tỷ bản ghi, bảo mật cao, nhiều người dùng đồng thời, đảm bảo tính toàn vẹn dữ liệu (không trùng lặp, không mất mát).</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+            erd: {
+                title: "Chương 2: Thiết Kế ERD & Các Loại Khóa",
+                description: "Entity Relationship Diagram (Sơ đồ thực thể liên kết) - Bản vẽ kỹ thuật của Database.",
+                content: `
+                    <div class="space-y-8 animate-fade-in">
+                        
+                        <!-- Theory: Keys -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <h2 class="text-2xl font-bold text-slate-800 mb-6">Khái Niệm Cốt Lõi: Khóa (Key)</h2>
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center font-bold text-xs mr-3">PK</div>
+                                        <h3 class="font-bold text-slate-700">Primary Key (Khóa Chính)</h3>
+                                    </div>
+                                    <p class="text-sm text-slate-600 mb-2">Định danh <strong>duy nhất</strong> cho mỗi dòng trong bảng. Không được trùng, không được rỗng (NULL).</p>
+                                    <div class="bg-slate-50 p-3 rounded border border-slate-200 text-xs font-mono text-slate-500">Ví dụ: CCCD, Mã sinh viên, Product ID.</div>
+                                </div>
+                                <div>
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs mr-3">FK</div>
+                                        <h3 class="font-bold text-slate-700">Foreign Key (Khóa Ngoại)</h3>
+                                    </div>
+                                    <p class="text-sm text-slate-600 mb-2">Cột dùng để <strong>liên kết</strong> sang bảng khác. Giá trị của nó phải tồn tại trong cột Khóa Chính của bảng kia.</p>
+                                    <div class="bg-slate-50 p-3 rounded border border-slate-200 text-xs font-mono text-slate-500">Ví dụ: user_id trong bảng Orders trỏ về id trong bảng Users.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive ERD Visualizer -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-bold text-slate-800">Mô Phỏng Quan Hệ (One-to-Many)</h2>
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Interactive Demo</span>
+                            </div>
+                            <p class="text-sm text-slate-500 mb-6">Di chuột vào các dòng bên dưới để xem cách dữ liệu liên kết với nhau qua Khóa.</p>
+                            
+                            <div class="grid md:grid-cols-2 gap-12 relative">
+                                <!-- Users Table -->
+                                <div class="border border-slate-300 rounded-lg overflow-hidden">
+                                    <div class="bg-slate-100 p-2 border-b border-slate-300 font-bold text-center text-slate-700">Users (Người dùng)</div>
+                                    <div class="p-0">
+                                        <div class="flex border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500 p-2">
+                                            <div class="w-12">PK (id)</div>
+                                            <div class="flex-1">Name</div>
+                                        </div>
+                                        <div class="user-row p-2 text-sm border-b border-slate-100 cursor-pointer hover:bg-yellow-50 transition-colors" data-id="1" onmouseenter="highlightRelation(1)" onmouseleave="resetRelation()">
+                                            <span class="font-mono font-bold text-yellow-600">1</span> - Nguyễn Văn A
+                                        </div>
+                                        <div class="user-row p-2 text-sm border-b border-slate-100 cursor-pointer hover:bg-yellow-50 transition-colors" data-id="2" onmouseenter="highlightRelation(2)" onmouseleave="resetRelation()">
+                                            <span class="font-mono font-bold text-yellow-600">2</span> - Trần Thị B
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Arrow Visual (CSS) -->
+                                <div class="hidden md:flex absolute inset-0 items-center justify-center pointer-events-none">
+                                    <div class="text-4xl text-slate-300">&#8594;</div>
+                                </div>
+
+                                <!-- Orders Table -->
+                                <div class="border border-slate-300 rounded-lg overflow-hidden">
+                                    <div class="bg-slate-100 p-2 border-b border-slate-300 font-bold text-center text-slate-700">Orders (Đơn hàng)</div>
+                                    <div class="p-0">
+                                        <div class="flex border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500 p-2">
+                                            <div class="w-12">id</div>
+                                            <div class="w-16">FK (u_id)</div>
+                                            <div class="flex-1">Total</div>
+                                        </div>
+                                        <!-- Orders for User 1 -->
+                                        <div class="order-row user-1 p-2 text-sm border-b border-slate-100 transition-colors connector-line">
+                                            101 | <span class="font-mono font-bold text-blue-600">1</span> | 500k
+                                        </div>
+                                        <div class="order-row user-1 p-2 text-sm border-b border-slate-100 transition-colors connector-line">
+                                            102 | <span class="font-mono font-bold text-blue-600">1</span> | 200k
+                                        </div>
+                                        <!-- Orders for User 2 -->
+                                        <div class="order-row user-2 p-2 text-sm border-b border-slate-100 transition-colors connector-line">
+                                            103 | <span class="font-mono font-bold text-blue-600">2</span> | 1.200k
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-4 italic text-center">Khi bạn chọn User (PK), các Order thuộc về User đó (thông qua FK) sẽ sáng lên.</p>
+                        </div>
+
+                         <!-- Tools -->
+                         <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
+                            <h3 class="text-lg font-bold text-indigo-800 mb-2">Công cụ thiết kế</h3>
+                            <p class="text-sm text-indigo-900 mb-4">Trong thực tế, chúng ta không vẽ tay mà dùng tool. <strong>draw.io (diagrams.net)</strong> là công cụ miễn phí phổ biến nhất.</p>
+                            <div class="flex space-x-2">
+                                <span class="px-3 py-1 bg-white rounded text-xs text-indigo-600 font-medium border border-indigo-200">dbdiagram.io</span>
+                                <span class="px-3 py-1 bg-white rounded text-xs text-indigo-600 font-medium border border-indigo-200">MySQL Workbench</span>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            sql: {
+                title: "Chương 3: Thực hành SQL (CRUD)",
+                description: "Học cú pháp SQL thông qua mô phỏng trực tiếp.",
+                content: `
+                    <div class="space-y-8 animate-fade-in">
+                        <!-- SQL Playground -->
+                        <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+                            <div class="bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center">
+                                <h2 class="text-white font-bold flex items-center">
+                                    <span class="text-green-400 mr-2">&#9654;</span> SQL Simulator
+                                </h2>
+                                <span class="text-xs text-slate-400">Database: users_db</span>
+                            </div>
+                            
+                            <div class="grid lg:grid-cols-3 min-h-[500px]">
+                                <!-- Controls Panel -->
+                                <div class="bg-slate-50 p-6 border-r border-slate-200 col-span-1 space-y-6">
+                                    <div>
+                                        <h3 class="font-bold text-slate-700 mb-2 text-sm uppercase">1. Lệnh SELECT (Đọc)</h3>
+                                        <p class="text-xs text-slate-500 mb-2">Lấy dữ liệu từ bảng.</p>
+                                        <button onclick="simulateSQL('SELECT')" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded transition-colors text-left font-mono">
+                                            SELECT * FROM users;
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <h3 class="font-bold text-slate-700 mb-2 text-sm uppercase">2. Lệnh INSERT (Thêm)</h3>
+                                        <p class="text-xs text-slate-500 mb-2">Thêm bản ghi mới.</p>
+                                        <button onclick="simulateSQL('INSERT')" class="w-full bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-4 rounded transition-colors text-left font-mono">
+                                            INSERT INTO users...
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <h3 class="font-bold text-slate-700 mb-2 text-sm uppercase">3. Lệnh UPDATE (Sửa)</h3>
+                                        <p class="text-xs text-slate-500 mb-2">Sửa tên người dùng ID=1.</p>
+                                        <button onclick="simulateSQL('UPDATE')" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-bold py-2 px-4 rounded transition-colors text-left font-mono">
+                                            UPDATE users SET...
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <h3 class="font-bold text-slate-700 mb-2 text-sm uppercase">4. Lệnh DELETE (Xóa)</h3>
+                                        <p class="text-xs text-slate-500 mb-2">Xóa người dùng ID=3.</p>
+                                        <button onclick="simulateSQL('DELETE')" class="w-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 px-4 rounded transition-colors text-left font-mono">
+                                            DELETE FROM users...
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="pt-4 border-t border-slate-200">
+                                        <button onclick="resetSim()" class="text-xs text-slate-400 hover:text-slate-600 underline">Reset Dữ liệu mẫu</button>
+                                    </div>
+                                </div>
+
+                                <!-- Output Panel -->
+                                <div class="lg:col-span-2 bg-slate-900 p-6 flex flex-col">
+                                    <!-- Log Display -->
+                                    <div class="mb-4">
+                                        <label class="text-xs font-bold text-slate-400 uppercase block mb-2">Executed Query:</label>
+                                        <div id="sql-log" class="font-mono text-sm text-green-400 min-h-[2rem]">
+                                            -- Ready to execute...
+                                        </div>
+                                    </div>
+
+                                    <!-- Result Table -->
+                                    <div class="flex-1 bg-white rounded-lg overflow-hidden relative">
+                                        <div class="absolute top-0 left-0 bg-slate-100 text-xs font-bold px-2 py-1 text-slate-500 rounded-br">Result Table</div>
+                                        <div class="p-6 overflow-x-auto mt-4">
+                                            <table class="db-table text-sm w-full">
+                                                <thead>
+                                                    <tr>
+                                                        <th>id</th>
+                                                        <th>name</th>
+                                                        <th>email</th>
+                                                        <th>role</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="result-body">
+                                                    <!-- JS renders here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-2 text-center">Đây là môi trường giả lập trên trình duyệt. Trong thực tế bạn sẽ dùng DBeaver hoặc Terminal.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            lab: {
+                title: "Chương 4: Bài Tập Cuối Khóa",
+                description: "Áp dụng kiến thức để thiết kế hệ thống bán hàng đơn giản.",
+                content: `
+                    <div class="space-y-8 animate-fade-in">
+                        <!-- Problem Statement -->
+                        <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-100">
+                            <div class="inline-block bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full mb-4">Project Mini</div>
+                            <h2 class="text-2xl font-bold text-slate-800 mb-4">Đề bài: Hệ thống User & Product</h2>
+                            <p class="text-slate-600 mb-4">Một khách hàng muốn xây dựng ứng dụng thương mại điện tử đơn giản. Họ cần lưu trữ thông tin:</p>
+                            <ul class="list-disc list-inside text-slate-600 space-y-2 mb-6 ml-4">
+                                <li><strong>Users:</strong> Tên, email, mật khẩu, địa chỉ.</li>
+                                <li><strong>Products:</strong> Tên sản phẩm, giá, mô tả, số lượng kho.</li>
+                                <li><strong>Yêu cầu:</strong> Thiết kế Database để lưu trữ 2 đối tượng trên. (Chưa cần làm phần Đơn hàng để đơn giản hóa).</li>
+                            </ul>
+                            
+                            <h3 class="font-bold text-slate-800 mb-3">Nhiệm vụ của bạn:</h3>
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm space-y-2">
+                                <p>1. Vẽ ERD cho 2 bảng trên (xác định tên cột, kiểu dữ liệu, khóa chính).</p>
+                                <p>2. Viết câu lệnh SQL để tạo bảng (CREATE TABLE).</p>
+                                <p>3. Viết 5 câu lệnh INSERT để thêm dữ liệu mẫu.</p>
+                                <p>4. Viết câu lệnh tìm sản phẩm có giá > 100.000đ.</p>
+                            </div>
+                        </div>
+
+                        <!-- Solution Accordion -->
+                        <div class="border border-slate-200 rounded-xl bg-white overflow-hidden">
+                            <button onclick="toggleSolution()" class="w-full flex justify-between items-center p-6 bg-slate-50 hover:bg-slate-100 transition-colors">
+                                <span class="font-bold text-slate-700">Xem Gợi Ý & Đáp Án Mẫu</span>
+                                <span id="arrow-icon" class="text-slate-400 transform transition-transform duration-300">&#9660;</span>
+                            </button>
+                            
+                            <div id="solution-content" class="hidden p-6 border-t border-slate-200 bg-slate-50">
+                                
+                                <!-- Part 1: ERD Design -->
+                                <div class="mb-8">
+                                    <h4 class="font-bold text-blue-700 mb-2">1. Thiết Kế Bảng (Schema)</h4>
+                                    <div class="grid md:grid-cols-2 gap-4">
+                                        <div class="bg-white p-4 border border-slate-200 rounded shadow-sm">
+                                            <div class="font-bold text-center border-b pb-2 mb-2">Table: users</div>
+                                            <div class="text-xs font-mono space-y-1">
+                                                <div class="flex justify-between"><span class="font-bold">id</span> <span class="text-slate-500">INT (PK, AI)</span></div>
+                                                <div class="flex justify-between"><span>full_name</span> <span class="text-slate-500">VARCHAR(100)</span></div>
+                                                <div class="flex justify-between"><span>email</span> <span class="text-slate-500">VARCHAR(100)</span></div>
+                                            </div>
+                                        </div>
+                                        <div class="bg-white p-4 border border-slate-200 rounded shadow-sm">
+                                            <div class="font-bold text-center border-b pb-2 mb-2">Table: products</div>
+                                            <div class="text-xs font-mono space-y-1">
+                                                <div class="flex justify-between"><span class="font-bold">id</span> <span class="text-slate-500">INT (PK, AI)</span></div>
+                                                <div class="flex justify-between"><span>name</span> <span class="text-slate-500">VARCHAR(200)</span></div>
+                                                <div class="flex justify-between"><span>price</span> <span class="text-slate-500">DECIMAL(10,2)</span></div>
+                                                <div class="flex justify-between"><span>stock</span> <span class="text-slate-500">INT</span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Part 2: SQL Code -->
+                                <div>
+                                    <h4 class="font-bold text-blue-700 mb-2">2. Mã Nguồn SQL (Postgres/MySQL)</h4>
+                                    <div class="code-block text-sm">
+<span class="text-slate-400">-- 1. Tạo bảng Users</span>
+<span class="sql-keyword">CREATE TABLE</span> users (
+    id <span class="sql-keyword">INT PRIMARY KEY AUTO_INCREMENT</span>,
+    full_name <span class="sql-keyword">VARCHAR</span>(100) <span class="sql-keyword">NOT NULL</span>,
+    email <span class="sql-keyword">VARCHAR</span>(100) <span class="sql-keyword">UNIQUE</span>
+);
+
+<span class="text-slate-400">-- 2. Tạo bảng Products</span>
+<span class="sql-keyword">CREATE TABLE</span> products (
+    id <span class="sql-keyword">INT PRIMARY KEY AUTO_INCREMENT</span>,
+    name <span class="sql-keyword">VARCHAR</span>(200) <span class="sql-keyword">NOT NULL</span>,
+    price <span class="sql-keyword">DECIMAL</span>(10,2) <span class="sql-keyword">DEFAULT</span> 0,
+    stock <span class="sql-keyword">INT</span>
+);
+
+<span class="text-slate-400">-- 3. Thêm dữ liệu</span>
+<span class="sql-keyword">INSERT INTO</span> products (name, price, stock) 
+<span class="sql-keyword">VALUES</span> (<span class="sql-string">'Laptop Dell'</span>, 15000000, 10),
+       (<span class="sql-string">'Chuột Logitech'</span>, 250000, 50);
+
+<span class="text-slate-400">-- 4. Tìm kiếm</span>
+<span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> products <span class="sql-keyword">WHERE</span> price > 100000;
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mistakes to Avoid -->
+                        <div class="bg-red-50 p-6 rounded-xl border border-red-100 mt-6">
+                            <h3 class="text-lg font-bold text-red-800 mb-2">&#9888; Lỗi Thường Gặp Của Newbie</h3>
+                            <ul class="list-disc list-inside text-red-700 text-sm space-y-1">
+                                <li>Đặt tên bảng/cột có dấu tiếng Việt hoặc khoảng trắng (Sai: <code>Tên Khách Hàng</code> -> Đúng: <code>ten_khach_hang</code>).</li>
+                                <li>Quên khóa chính (Primary Key) -> Dẫn đến dữ liệu trùng lặp không kiểm soát.</li>
+                                <li>Lưu sai kiểu dữ liệu (Ví dụ: Lưu giá tiền bằng VARCHAR thay vì DECIMAL/INT).</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        // --- Core Functions ---
+
+        function init() {
+            // Load initial module
+            loadModule('intro');
+            
+            // Render Chart for Intro (Wait for DOM update)
+            setTimeout(() => {
+                renderIntroChart();
+            }, 100);
+
+            // Mobile menu listener
+            document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.toggle('hidden');
+                sidebar.classList.toggle('fixed');
+                sidebar.classList.toggle('z-50');
+            });
+        }
+
+        function loadModule(moduleId) {
+            // Update State
+            appState.currentModule = moduleId;
+            
+            // Update Sidebar UI
+            document.querySelectorAll('.nav-item').forEach(el => {
+                if (el.dataset.module === moduleId) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+
+            // Update Progress Bar (Mock Logic)
+            let progress = 0;
+            if(moduleId === 'intro') progress = 25;
+            if(moduleId === 'erd') progress = 50;
+            if(moduleId === 'sql') progress = 75;
+            if(moduleId === 'lab') progress = 100;
+            updateProgress(progress);
+
+            // Inject Content
+            const container = document.getElementById('main-content');
+            const data = modules[moduleId];
+            
+            container.innerHTML = `
+                <div class="max-w-4xl mx-auto">
+                    <header class="mb-8">
+                        <h1 class="text-3xl md:text-4xl font-bold text-slate-800 mb-2">${data.title}</h1>
+                        <p class="text-lg text-slate-500">${data.description}</p>
+                    </header>
+                    ${data.content}
+                </div>
+            `;
+
+            // Re-initialize specific scripts if needed based on module
+            if (moduleId === 'intro') {
+                setTimeout(renderIntroChart, 50);
+            }
+            if (moduleId === 'sql') {
+                setTimeout(renderSQLTable, 50);
+            }
+            // Close mobile menu if open
+            if(window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('hidden');
+            }
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progress-bar').style.width = percent + '%';
+            document.getElementById('progress-text').innerText = percent + '%';
+        }
+
+        // --- Intro Chart Logic ---
+        function renderIntroChart() {
+            const ctx = document.getElementById('dbChart');
+            if (!ctx) return;
+            
+            // Destroy existing if any to prevent canvas reuse error
+            if (window.myChart instanceof Chart) {
+                window.myChart.destroy();
+            }
+
+            window.myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['PostgreSQL', 'MySQL', 'SQLite', 'Microsoft SQL', 'MongoDB'],
+                    datasets: [{
+                        label: '% Professional Developers Using',
+                        data: [49, 40, 28, 26, 25],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)', // Blue
+                            'rgba(245, 158, 11, 0.7)', // Amber
+                            'rgba(100, 116, 139, 0.7)', // Slate
+                            'rgba(239, 68, 68, 0.7)',  // Red
+                            'rgba(16, 185, 129, 0.7)'  // Green
+                        ],
+                        borderColor: [
+                            'rgb(59, 130, 246)',
+                            'rgb(245, 158, 11)',
+                            'rgb(100, 116, 139)',
+                            'rgb(239, 68, 68)',
+                            'rgb(16, 185, 129)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { display: false }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw + '% Developers';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- ERD Interaction Logic ---
+        function highlightRelation(userId) {
+            // Find all order rows related to this user
+            const orders = document.querySelectorAll(`.user-${userId}`);
+            orders.forEach(el => {
+                el.classList.add('connector-active');
+            });
+        }
+
+        function resetRelation() {
+            const orders = document.querySelectorAll('.order-row');
+            orders.forEach(el => {
+                el.classList.remove('connector-active');
+            });
+        }
+
+        // --- SQL Simulator Logic ---
+        function renderSQLTable() {
+            const tbody = document.getElementById('result-body');
+            if(!tbody) return;
+
+            tbody.innerHTML = '';
+            appState.simulatedDB.forEach(user => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td><span class="px-2 py-1 bg-slate-100 text-xs rounded text-slate-600">${user.role}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function simulateSQL(type) {
+            const log = document.getElementById('sql-log');
+            
+            if (type === 'SELECT') {
+                log.innerHTML = `<span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> users; <br> <span class="text-slate-500">-> Đã lấy ${appState.simulatedDB.length} bản ghi.</span>`;
+                renderSQLTable(); // Just refresh
+            } 
+            else if (type === 'INSERT') {
+                const newId = appState.simulatedDB.length + 1;
+                const newUser = { id: newId, name: `New User ${newId}`, email: `user${newId}@test.com`, role: 'User' };
+                appState.simulatedDB.push(newUser);
+                log.innerHTML = `<span class="sql-keyword">INSERT INTO</span> users <span class="sql-keyword">VALUES</span> (${newId}, ...); <br> <span class="text-green-400">-> Đã thêm bản ghi ID ${newId}.</span>`;
+                renderSQLTable();
+            } 
+            else if (type === 'UPDATE') {
+                if (appState.simulatedDB.length > 0) {
+                    appState.simulatedDB[0].name = "Updated Name " + Math.floor(Math.random() * 100);
+                    log.innerHTML = `<span class="sql-keyword">UPDATE</span> users <span class="sql-keyword">SET</span> name = '...' <span class="sql-keyword">WHERE</span> id=1; <br> <span class="text-yellow-400">-> Đã cập nhật ID 1.</span>`;
+                    renderSQLTable();
+                } else {
+                    log.innerHTML = `<span class="text-red-400">Error: Bảng trống, không thể Update.</span>`;
+                }
+            } 
+            else if (type === 'DELETE') {
+                if (appState.simulatedDB.length > 0) {
+                    const removed = appState.simulatedDB.pop();
+                    log.innerHTML = `<span class="sql-keyword">DELETE FROM</span> users <span class="sql-keyword">WHERE</span> id=${removed.id}; <br> <span class="text-red-400">-> Đã xóa bản ghi cuối cùng.</span>`;
+                    renderSQLTable();
+                } else {
+                    log.innerHTML = `<span class="text-red-400">Error: Bảng trống, không thể Delete.</span>`;
+                }
+            }
+        }
+
+        function resetSim() {
+            appState.simulatedDB = [
+                { id: 1, name: 'Nguyễn Văn A', email: 'vana@gmail.com', role: 'User' },
+                { id: 2, name: 'Trần Thị B', email: 'thib@gmail.com', role: 'Admin' },
+                { id: 3, name: 'Lê Văn C', email: 'vanc@gmail.com', role: 'User' }
+            ];
+            renderSQLTable();
+            document.getElementById('sql-log').innerHTML = '-- Data Reset.';
+        }
+
+        // --- Lab Logic ---
+        function toggleSolution() {
+            const content = document.getElementById('solution-content');
+            const arrow = document.getElementById('arrow-icon');
+            
+            content.classList.toggle('hidden');
+            if (!content.classList.contains('hidden')) {
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Start
+        window.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
