@@ -58,10 +58,9 @@
             }
         }
 
-        .nav-item.active {
-            background-color: #eff6ff;
-            color: #2563eb;
-            border-right: 4px solid #2563eb;
+        /* Active State handled by Tailwind classes in JS now, but keeping base helper */
+        .nav-item {
+            transition: all 0.2s ease-in-out;
         }
 
         .fade-in {
@@ -74,7 +73,7 @@
         }
     </style>
     <!-- Chosen Palette: Tailwind Blue & Slate -->
-    <!-- Application Structure: Dashboard layout with modules. Fixed SyntaxError issue. -->
+    <!-- Application Structure: Dashboard layout with modules. Fixed Navigation State Logic. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </head>
 <body class="h-screen flex flex-col md:flex-row overflow-hidden">
@@ -97,37 +96,37 @@
             <div class="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Lộ trình học tập</div>
             <ul class="space-y-1">
                 <li>
-                    <button onclick="loadModule('intro')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group active">
+                    <button id="nav-intro" onclick="loadModule('intro')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
                         <i class="fas fa-book-open w-6 text-gray-400 group-hover:text-blue-500"></i>
                         <span class="font-medium">Tổng quan & ORM</span>
                     </button>
                 </li>
                 <li>
-                    <button onclick="loadModule('models')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
+                    <button id="nav-models" onclick="loadModule('models')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
                         <i class="fas fa-cube w-6 text-gray-400 group-hover:text-blue-500"></i>
                         <span class="font-medium">Định nghĩa Model</span>
                     </button>
                 </li>
                 <li>
-                    <button onclick="loadModule('sessions')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
+                    <button id="nav-sessions" onclick="loadModule('sessions')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
                         <i class="fas fa-database w-6 text-gray-400 group-hover:text-blue-500"></i>
                         <span class="font-medium">Session & Transaction</span>
                     </button>
                 </li>
                 <li>
-                    <button onclick="loadModule('queries')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
+                    <button id="nav-queries" onclick="loadModule('queries')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
                         <i class="fas fa-search w-6 text-gray-400 group-hover:text-blue-500"></i>
                         <span class="font-medium">Truy vấn (Query)</span>
                     </button>
                 </li>
                 <li>
-                    <button onclick="loadModule('alembic')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
+                    <button id="nav-alembic" onclick="loadModule('alembic')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
                         <i class="fas fa-code-branch w-6 text-gray-400 group-hover:text-blue-500"></i>
                         <span class="font-medium">Migration (Alembic)</span>
                     </button>
                 </li>
                 <li>
-                    <button onclick="loadModule('practice')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
+                    <button id="nav-practice" onclick="loadModule('practice')" class="nav-item w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors flex items-center group">
                         <i class="fas fa-laptop-code w-6 text-gray-400 group-hover:text-blue-500"></i>
                         <span class="font-medium">Thực hành & Bài tập</span>
                     </button>
@@ -160,11 +159,11 @@
 
     <script>
         // --- DATA STORE ---
-        // Ensure no syntax errors in object definition
         const courseData = {
             intro: {
                 title: "Ngày 1: Giới thiệu ORM & SQLAlchemy",
                 description: "Hiểu bản chất của Object Relational Mapping (ORM), tại sao chúng ta sử dụng nó thay vì SQL thuần.",
+                progress: 15,
                 content: `
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 fade-in">
                         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -237,6 +236,7 @@
             models: {
                 title: "Ngày 2: Định nghĩa Model",
                 description: "Học cách chuyển đổi tư duy từ 'Bảng' (Table) sang 'Lớp' (Class). Model là trái tim của ứng dụng ORM.",
+                progress: 30,
                 content: `
                     <div class="mb-8 fade-in">
                          <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -306,6 +306,7 @@
             sessions: {
                 title: "Ngày 3: Session & Transaction",
                 description: "Session là cầu nối giữa Python Objects và Database Connection. Hiểu về vòng đời của Session là chìa khóa để tránh lỗi.",
+                progress: 50,
                 content: `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 fade-in">
                         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -368,6 +369,7 @@
             queries: {
                 title: "Ngày 4: Truy vấn dữ liệu (Querying)",
                 description: "Sức mạnh của ORM nằm ở khả năng xây dựng các câu truy vấn phức tạp bằng ngôn ngữ lập trình thay vì nối chuỗi SQL.",
+                progress: 65,
                 content: `
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8 fade-in">
                         <div class="flex justify-between items-center mb-4">
@@ -407,6 +409,7 @@
             alembic: {
                 title: "Ngày 5: Migration với Alembic",
                 description: "Quản lý thay đổi cấu trúc Database theo thời gian thực (Versioning).",
+                progress: 85,
                 content: `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 fade-in">
                         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -476,6 +479,7 @@
             practice: {
                 title: "Ngày 6-7: Thực hành chuyển đổi CRUD",
                 description: "Bài tập lớn: Chuyển đổi một ứng dụng quản lý sinh viên từ sử dụng SQL thuần sang SQLAlchemy ORM.",
+                progress: 100,
                 content: `
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8 fade-in">
                         <h3 class="text-lg font-bold text-gray-800 mb-4">So sánh trực quan: Raw SQL vs ORM</h3>
@@ -545,12 +549,37 @@
             const mainContent = document.getElementById('main-content');
             const data = courseData[moduleId];
             
-            // Update Active Nav State
+            // Centralized Navigation State Logic
+            // 1. Reset all buttons to inactive state
             document.querySelectorAll('.nav-item').forEach(el => {
-                el.classList.remove('active', 'bg-blue-50', 'text-blue-600', 'border-right');
+                // Remove active classes
+                el.classList.remove('active', 'bg-blue-50', 'text-blue-600', 'border-r-4', 'border-blue-600');
+                // Add inactive text color
                 el.classList.add('text-gray-600');
+                
+                // Reset icon color
+                const icon = el.querySelector('i');
+                if(icon) {
+                    icon.classList.remove('text-blue-500');
+                    icon.classList.add('text-gray-400');
+                }
             });
-            // Re-apply active style logic inside click handlers or here if we had ID refs
+
+            // 2. Set active state for the clicked button using ID
+            const activeBtn = document.getElementById('nav-' + moduleId);
+            if(activeBtn) {
+                // Add active classes
+                activeBtn.classList.add('active', 'bg-blue-50', 'text-blue-600', 'border-r-4', 'border-blue-600');
+                // Remove inactive text color
+                activeBtn.classList.remove('text-gray-600');
+                
+                // Set active icon color
+                const activeIcon = activeBtn.querySelector('i');
+                if(activeIcon) {
+                    activeIcon.classList.remove('text-gray-400');
+                    activeIcon.classList.add('text-blue-500');
+                }
+            }
             
             // Inject Content
             mainContent.innerHTML = `
@@ -562,6 +591,12 @@
                     ${data.content}
                 </div>
             `;
+            
+            // Update Progress Bar
+            if (data.progress) {
+                document.getElementById('progress-bar').style.width = data.progress + '%';
+                document.getElementById('progress-text').innerText = data.progress + '%';
+            }
 
             // Initialize Charts if present
             if (data.chartId && data.chartData) {
@@ -682,32 +717,6 @@
         // Initialize App
         window.addEventListener('DOMContentLoaded', () => {
             loadModule('intro'); // Default start
-            
-            // Add click handlers to sidebar buttons manually for styling update
-            const navButtons = document.querySelectorAll('.nav-item');
-            navButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    navButtons.forEach(b => {
-                        b.classList.remove('active', 'bg-blue-50', 'text-blue-600', 'border-r-4', 'border-blue-600');
-                        b.classList.add('text-gray-600');
-                        b.querySelector('i').classList.remove('text-blue-500');
-                        b.querySelector('i').classList.add('text-gray-400');
-                    });
-                    this.classList.add('active', 'bg-blue-50', 'text-blue-600', 'border-r-4', 'border-blue-600');
-                    this.classList.remove('text-gray-600');
-                    this.querySelector('i').classList.remove('text-gray-400');
-                    this.querySelector('i').classList.add('text-blue-500');
-                });
-            });
-            // Set first one active manually
-            if(navButtons.length > 0) {
-                // Manually apply active style to first button without triggering click (to avoid double loadModule)
-                const firstBtn = navButtons[0];
-                firstBtn.classList.add('active', 'bg-blue-50', 'text-blue-600', 'border-r-4', 'border-blue-600');
-                firstBtn.classList.remove('text-gray-600');
-                firstBtn.querySelector('i').classList.remove('text-gray-400');
-                firstBtn.querySelector('i').classList.add('text-blue-500');
-            }
         });
 
     </script>
